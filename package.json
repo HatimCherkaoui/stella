@@ -4,15 +4,29 @@
   "description": "Stella — persistent AI sidebar companion for Chrome",
   "main": "background.js",
   "scripts": {
+    "test": "jest --testPathPatterns=tests/ --verbose",
     "build": "./build.sh",
     "build:skip-tests": "./build.sh --skip-tests",
     "release": "./release.sh"
   },
-  "keywords": ["chrome-extension", "ai", "sidebar", "sidepanel"],
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "keywords": [
+    "chrome-extension",
+    "ai",
+    "sidebar",
+    "sidepanel"
+  ],
   "author": "Hatim Cherkaoui",
   "license": "MIT",
   "devDependencies": {
     "clean-css-cli": "^5.6.3",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
     "terser": "^5.46.1"
   }
 }
