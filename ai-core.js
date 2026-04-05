@@ -54,8 +54,8 @@ const AI_MODEL_LIST = Object.entries(AI_PROVIDERS).flatMap(([providerKey, p]) =>
     p.models.map(m => ({ ...m, provider: providerKey, providerLabel: p.label, color: p.color }))
 );
 
-// ── Default model preference ──────────────────────────────────────────────────
-const AI_DEFAULT_MODEL = { provider: 'openai', modelId: 'gpt-4o-mini' };
+// ── Default model preference (source of truth: STELLA_CONFIG in config.js) ───
+const AI_DEFAULT_MODEL = STELLA_CONFIG.defaultModel;
 
 // ── API key storage (chrome.storage.local only — never sync) ──────────────────
 function loadApiKeys(cb) {

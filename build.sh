@@ -26,7 +26,7 @@ info "Stella v${VERSION} — production build"
 
 # ── Pre-flight checks ─────────────────────────────────────────────────────────
 info "Pre-flight checks…"
-for f in manifest.json sidepanel.html sidepanel.js sidepanel.css ai-core.js background.js; do
+for f in manifest.json sidepanel.html sidepanel.js sidepanel.css ai-core.js background.js config.js; do
     [[ -f "$f" ]] || error "Required file missing: $f"
 done
 [[ -d "icons" ]] || error "icons/ directory missing"
@@ -40,6 +40,14 @@ mkdir -p dist/icons
 BANNER="/* Stella © $(date +%Y) Hatim Cherkaoui — All rights reserved. */"
 
 # ── Minify JavaScript ─────────────────────────────────────────────────────────
+info "Minifying config.js…"
+$TERSER config.js \
+    --compress passes=3,drop_debugger=true \
+    --mangle --ecma 2020 \
+    --output dist/config.js
+printf '%s\n' "$BANNER" | cat - dist/config.js > dist/config.js.tmp && mv dist/config.js.tmp dist/config.js
+ok "config.js minified"
+
 info "Minifying ai-core.js…"
 $TERSER ai-core.js \
     --compress passes=3,drop_debugger=true \
