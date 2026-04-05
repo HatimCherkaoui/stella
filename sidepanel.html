@@ -22,6 +22,13 @@
         </span>
 
         <div id="sp-header-right">
+            <button id="chat-about-btn" class="chat-icon-btn" title="About Stella" aria-label="About Stella">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="8" stroke-width="2.5"/>
+                    <line x1="12" y1="12" x2="12" y2="16"/>
+                </svg>
+            </button>
             <button id="chat-history-btn" class="chat-icon-btn" title="Chat history" aria-label="Chat history">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="1 4 1 10 7 10"/>
@@ -76,6 +83,53 @@
             <div class="chat-side-panel-ftr">
                 <button id="chat-export-btn" class="chat-action-btn">Export JSON</button>
                 <button id="chat-clear-history-btn" class="chat-action-btn danger">Clear all</button>
+            </div>
+        </div>
+
+        <!-- ── About panel (overlay) ── -->
+        <div id="chat-about-panel" class="chat-side-panel hidden" aria-label="About Stella">
+            <div class="chat-side-panel-hdr">
+                <span>About Stella</span>
+                <button id="chat-about-close" class="chat-icon-btn" aria-label="Close about">&times;</button>
+            </div>
+            <div id="chat-about-body">
+                <div class="about-logo">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M9 2 L10.2 6.8 L15 8 L10.2 9.2 L9 14 L7.8 9.2 L3 8 L7.8 6.8 Z" fill="currentColor"/>
+                        <path d="M18 13 L18.8 15.8 L21.5 16.5 L18.8 17.2 L18 20 L17.2 17.2 L14.5 16.5 L17.2 15.8 Z" fill="currentColor" opacity="0.7"/>
+                    </svg>
+                    <span class="about-name">Stella AI</span>
+                </div>
+                <p class="about-tagline">Your persistent AI companion for Chrome.</p>
+                <p class="about-desc">
+                    Stella is a browser sidebar chatbot that lets you chat with the world's leading AI models —
+                    OpenAI, Anthropic, Google, and Mistral — without leaving the page you're on.
+                    Keep conversations alive across tabs, manage browser context, and run multi-model comparisons, all in one place.
+                </p>
+                <ul class="about-features">
+                    <li>Multi-provider support — GPT-4o, Claude, Gemini, Mistral</li>
+                    <li>Persistent chat history across sessions</li>
+                    <li>Page &amp; tab context injection</li>
+                    <li>Multi-agent side-by-side comparison</li>
+                    <li>Slash commands &amp; tab picker</li>
+                    <li>Your API keys stay local — never shared</li>
+                </ul>
+                <div class="about-meta">
+                    <span>Version <span id="about-version"></span></span>
+                    <span class="about-sep">·</span>
+                    <span>By <a id="about-author-link" href="" target="_blank" rel="noopener noreferrer"></a></span>
+                </div>
+                <a id="about-donate-link" class="about-donate-btn" href="" target="_blank" rel="noopener noreferrer" title="Support Stella on PayPal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575z"/>
+                    </svg>
+                    Support Stella on PayPal
+                </a>
+                <p class="about-privacy-note">
+                    <a id="about-privacy-link" href="" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                    <span class="about-sep">·</span>
+                    <a id="about-source-link" href="" target="_blank" rel="noopener noreferrer">Source Code</a>
+                </p>
             </div>
         </div>
 

@@ -2057,6 +2057,17 @@ function startNewSession() {
 
 // ── Wire up event listeners ───────────────────────────────────────────────────
 function initChat() {
+    // Populate About panel from STELLA_CONFIG / manifest
+    const version = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest)
+        ? chrome.runtime.getManifest().version
+        : '—';
+    const el = id => document.getElementById(id);
+    if (el('about-version'))      el('about-version').textContent       = version;
+    if (el('about-author-link'))  { el('about-author-link').href = STELLA_CONFIG.author.github; el('about-author-link').textContent = STELLA_CONFIG.author.name; }
+    if (el('about-donate-link'))  el('about-donate-link').href          = STELLA_CONFIG.links.paypal;
+    if (el('about-privacy-link')) el('about-privacy-link').href         = STELLA_CONFIG.links.privacyPolicy;
+    if (el('about-source-link'))  el('about-source-link').href          = STELLA_CONFIG.links.repo;
+
     // Load API keys
     loadApiKeys(keys => {
         apiKeys = keys;
@@ -2269,6 +2280,25 @@ function initChat() {
         if (empty) empty.style.display = '';
         updateStatsBar(null);
         closeHistoryPanel();
+    });
+
+    // ── About ──
+    $('chat-about-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        const panel = $('chat-about-panel');
+        if (panel.classList.contains('hidden')) {
+            closeHistoryPanel();
+            closeSettingsPanel();
+            panel.classList.remove('hidden');
+            $('chat-about-btn').classList.add('active');
+        } else {
+            panel.classList.add('hidden');
+            $('chat-about-btn').classList.remove('active');
+        }
+    });
+    $('chat-about-close').addEventListener('click', () => {
+        $('chat-about-panel').classList.add('hidden');
+        $('chat-about-btn').classList.remove('active');
     });
 
     // ── Settings ──
