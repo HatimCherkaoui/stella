@@ -72,14 +72,9 @@ info "Pushing to origin…"
 git push origin "$BRANCH" --follow-tags
 ok "Pushed ${TAG}"
 
-# ── GitHub release ────────────────────────────────────────────────────────────
-command -v gh > /dev/null || error "'gh' CLI not found. Install it: brew install gh"
-
-info "Creating GitHub release ${TAG}…"
-gh release create "$TAG" \
-    "$ZIP_PATH" \
-    --title "Stella ${TAG}" \
-    --generate-notes
-ok "GitHub release created → https://github.com/HatimCherkaoui/stella/releases/tag/${TAG}"
+# ── Done ─────────────────────────────────────────────────────────────────────
 echo ""
-echo -e "${GREEN}✓ Stella ${TAG} released successfully!${NC}"
+echo -e "${GREEN}✓ Stella ${TAG} tag pushed successfully!${NC}"
+echo -e "${BLUE}▶${NC} GitHub Actions will now build, test, create the GitHub release,"
+echo -e "  and publish the zip to ${BLUE}HatimCherkaoui/stella-releases${NC} automatically."
+echo -e "  Follow progress at: https://github.com/HatimCherkaoui/stella/actions"

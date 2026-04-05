@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+# GITHUB_TOKEN needs write access to create the release
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, Test & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - uses: actions/checkout@v4
+
+      # ── Node ────────────────────────────────────────────────────────────────
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # ── Dependencies ────────────────────────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Tests ───────────────────────────────────────────────────────────────
+      - name: Run test suite
+        run: npm test
+
+      # ── Build ───────────────────────────────────────────────────────────────
+      - name: Build extension
+        run: ./build.sh --skip-tests
+
+      # ── Extract version from tag (v1.2.3 → 1.2.3) ──────────────────────────
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # ── Create GitHub release on HatimCherkaoui/stella ──────────────────────
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Stella ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: release/stella-${{ steps.version.outputs.version }}.zip
+
+      # ── Publish to stella-releases repo ─────────────────────────────────────
+      # Requires a repository secret RELEASES_PAT → a fine-grained PAT with
+      # "Contents: Read and write" permission on HatimCherkaoui/stella-releases
+      - name: Publish to stella-releases
+        env:
+          RELEASES_PAT: ${{ secrets.RELEASES_PAT }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git clone \
+            "https://x-access-token:${RELEASES_PAT}@github.com/HatimCherkaoui/stella-releases.git" \
+            /tmp/stella-releases
+
+          cp "release/stella-${VERSION}.zip" /tmp/stella-releases/
+          cp README.md  /tmp/stella-releases/
+          cp PRIVACY.md /tmp/stella-releases/
+
+          cd /tmp/stella-releases
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          # Nothing to commit if this version was already pushed (idempotent)
+          git diff --cached --quiet && echo "No changes to commit." && exit 0
+          git commit -m "release: Stella v${VERSION}"
+          git push
