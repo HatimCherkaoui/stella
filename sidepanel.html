@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stella AI</title>
+    <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+
+<div id="sp-root">
+
+    <!-- ── Header bar (logo · history · new session · settings) ── -->
+    <div id="sp-header">
+        <span id="sp-logo">
+            <!-- Stella icon: two 4-pointed stars -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M9 2 L10.2 6.8 L15 8 L10.2 9.2 L9 14 L7.8 9.2 L3 8 L7.8 6.8 Z" fill="currentColor"/>
+                <path d="M18 13 L18.8 15.8 L21.5 16.5 L18.8 17.2 L18 20 L17.2 17.2 L14.5 16.5 L17.2 15.8 Z" fill="currentColor" opacity="0.7"/>
+            </svg>
+            Stella
+        </span>
+
+        <div id="sp-header-right">
+            <button id="chat-history-btn" class="chat-icon-btn" title="Chat history" aria-label="Chat history">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1 4 1 10 7 10"/>
+                    <path d="M3.51 15a9 9 0 1 0 .49-4.2"/>
+                </svg>
+            </button>
+            <button id="chat-settings-btn" class="chat-icon-btn" title="Settings" aria-label="Settings">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </button>
+            <button id="chat-new-btn" class="chat-new-btn" title="New chat">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                New
+            </button>
+        </div>
+    </div>
+
+    <!-- Model dropdown (anchored to toolbar pill below) -->
+    <div id="chat-model-dropdown" class="chat-model-dropdown hidden" role="listbox" aria-label="Select model"></div>
+
+    <!-- ── Main chat area ── -->
+    <div id="sp-chat">
+
+        <!-- Messages -->
+        <div id="chat-messages" role="log" aria-live="polite" aria-label="Chat messages"></div>
+
+        <!-- Empty state -->
+        <div id="chat-empty">
+            <div class="chat-empty-icon">
+                <!-- Stella icon filled — large -->
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M9 2 L10.2 6.8 L15 8 L10.2 9.2 L9 14 L7.8 9.2 L3 8 L7.8 6.8 Z" fill="currentColor"/>
+                    <path d="M18 13 L18.8 15.8 L21.5 16.5 L18.8 17.2 L18 20 L17.2 17.2 L14.5 16.5 L17.2 15.8 Z" fill="currentColor" opacity="0.7"/>
+                </svg>
+            </div>
+            <p class="chat-empty-title">Stella</p>
+            <p class="chat-empty-sub">Your persistent AI companion.<br>Type <kbd>/</kbd> for commands or <kbd>@</kbd> to pick a tab.</p>
+        </div>
+
+        <!-- ── History panel (overlay) ── -->
+        <div id="chat-history-panel" class="chat-side-panel hidden" aria-label="Chat history">
+            <div class="chat-side-panel-hdr">
+                <span>History</span>
+                <button id="chat-history-close" class="chat-icon-btn" aria-label="Close history">&times;</button>
+            </div>
+            <div id="chat-history-list"></div>
+            <div class="chat-side-panel-ftr">
+                <button id="chat-export-btn" class="chat-action-btn">Export JSON</button>
+                <button id="chat-clear-history-btn" class="chat-action-btn danger">Clear all</button>
+            </div>
+        </div>
+
+        <!-- ── Settings panel (overlay) ── -->
+        <div id="chat-settings-panel" class="chat-side-panel hidden" aria-label="Chat settings">
+            <div class="chat-side-panel-hdr">
+                <span>Settings</span>
+                <button id="chat-settings-close" class="chat-icon-btn" aria-label="Close settings">&times;</button>
+            </div>
+            <div id="chat-settings-body"></div>
+        </div>
+
+        <!-- ── Tab manager panel (overlay) ── -->
+        <div id="sp-tabs-panel" class="chat-side-panel hidden" aria-label="Tab manager">
+            <div class="chat-side-panel-hdr">
+                <span>Open Tabs</span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <button id="sp-tabs-inject-btn" class="chat-action-btn" title="Send full tab list to AI as context" style="font-size:11px;padding:4px 10px;">
+                        Send to AI
+                    </button>
+                    <button id="sp-tabs-close" class="chat-icon-btn" aria-label="Close tabs panel">&times;</button>
+                </div>
+            </div>
+            <div class="sp-tabs-open-row">
+                <input id="sp-tabs-url-input" class="sp-tabs-url-input" type="url"
+                    placeholder="https://…  open a new tab" aria-label="URL to open"
+                    autocomplete="off" spellcheck="false" />
+                <button id="sp-tabs-open-btn" class="chat-action-btn" style="white-space:nowrap;flex-shrink:0;">Open</button>
+            </div>
+            <div id="sp-tabs-list"></div>
+        </div>
+
+        <!-- ── Input area ── -->
+        <div id="chat-input-wrap">
+
+            <!-- Slash command autocomplete popup (shown above input) -->
+            <div id="slash-cmd-popup" class="sp-popup hidden" role="listbox" aria-label="Commands"></div>
+
+            <!-- @tab picker popup (shown above input) -->
+            <div id="tab-picker-popup" class="sp-popup hidden" role="listbox" aria-label="Pick a tab"></div>
+
+            <!-- Multi-agent comparison bar (above the box) -->
+            <div id="chat-multi-agent-bar" class="hidden"></div>
+
+            <!-- ── Unified prompt box ── -->
+            <div id="chat-input-box">
+
+                <!-- Context pills (top of box, hidden when empty) -->
+                <div id="input-context-row">
+                    <div id="chat-tab-ctx" class="chat-tab-ctx hidden">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <span id="chat-tab-ctx-title"></span>
+                        <button id="chat-tab-ctx-remove" aria-label="Remove page context">&times;</button>
+                    </div>
+                    <div id="sp-tablist-ctx" class="sp-tablist-ctx hidden">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                            <line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
+                        <span id="sp-tablist-ctx-label">All tabs in context</span>
+                        <button id="sp-tablist-ctx-remove" class="sp-tablist-ctx-remove" aria-label="Remove tab list from context">&times;</button>
+                    </div>
+                </div>
+
+                <!-- Textarea -->
+                <textarea id="chat-input" rows="1"
+                    placeholder="Ask anything… / for commands, @ for tabs"
+                    aria-label="Chat message input"
+                    autocomplete="off" spellcheck="false"></textarea>
+
+                <!-- Bottom toolbar (inside the box) -->
+                <div id="chat-input-toolbar">
+                    <div id="chat-toolbar-left">
+
+                        <!-- Context / tabs pill -->
+                        <button id="sp-tabs-btn" class="sp-tabs-pill" title="Manage tabs / add context" aria-label="Manage tabs">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                            <span id="sp-tabs-count">0</span>
+                            <span class="sp-tabs-pill-label">tabs</span>
+                        </button>
+
+                        <!-- Model picker pill -->
+                        <button id="chat-model-btn" class="chat-model-pill" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="chat-model-icon" class="chat-provider-dot" data-provider="openai"></span>
+                            <span id="chat-model-label">GPT-4o mini</span>
+                            <svg class="chat-caret" width="9" height="6" viewBox="0 0 10 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="1,1 5,5.5 9,1"/>
+                            </svg>
+                        </button>
+
+                        <!-- Multi-agent / compare models toggle -->
+                        <button id="chat-multi-btn" class="chat-icon-btn" title="Compare models" aria-pressed="false">
+                            <!-- Two chat panels with content lines — clearly not a pause button -->
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="3" width="8" height="14" rx="2"/>
+                                <line x1="4"  y1="7"  x2="8"  y2="7"/>
+                                <line x1="4"  y1="10" x2="7"  y2="10"/>
+                                <line x1="4"  y1="13" x2="8"  y2="13"/>
+                                <rect x="14" y="3" width="8" height="14" rx="2"/>
+                                <line x1="16" y1="7"  x2="20" y2="7"/>
+                                <line x1="16" y1="10" x2="19" y2="10"/>
+                                <line x1="16" y1="13" x2="20" y2="13"/>
+                                <path d="M10 20h4M12 17v3"/>
+                            </svg>
+                        </button>
+
+                        <!-- Reasoning / thinking toggle -->
+                        <button id="chat-reasoning-btn" class="chat-icon-btn" title="Enable reasoning (thinking tokens)" aria-pressed="false">
+                            <!-- Brain icon -->
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+                                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+                            </svg>
+                        </button>
+
+                    </div>
+                    <div id="chat-toolbar-right">
+                        <!-- Send button -->
+                        <button id="chat-send-btn" class="chat-send-btn" aria-label="Send message" disabled>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                            </svg>
+                        </button>
+                        <!-- Stop button (shown while streaming) -->
+                        <button id="chat-stop-btn" class="chat-stop-btn hidden" aria-label="Stop generation">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+            </div><!-- #chat-input-box -->
+
+            <div id="chat-stats-bar" class="chat-stats-bar"></div>
+        </div>
+
+    </div><!-- #sp-chat -->
+
+</div><!-- #sp-root -->
+
+<script src="config.js"></script>
+<script src="ai-core.js"></script>
+<script src="sidepanel.js"></script>
+</body>
+</html>
