@@ -158,6 +158,7 @@ html, body {
     flex-shrink: 0;
     color: var(--text);
     display: block;
+    transform: translateY(-3px); /* compensate viewBox top-padding in stella.svg */
 }
 
 #sp-header-right {
