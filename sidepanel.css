@@ -50,6 +50,10 @@ html, body {
     --r-xl:  20px;
     --r-pill: 999px;
 
+    /* ── Aurora channel colours (r,g,b triplets — used in rgba(var(...), alpha)) ── */
+    --aurora-1: 20,65,195;    /* primary blob */
+    --aurora-2: 10,36,120;    /* secondary / deeper blob */
+
     /* ── Transition ── */
     --t-fast:   0.12s ease;
     --t-base:   0.18s ease;
@@ -89,9 +93,9 @@ html, body {
 #sp-root::before {
     z-index: -2;
     background:
-        radial-gradient(ellipse 80% 55% at 15% 25%, rgba(20,65,195,0.42) 0%, rgba(8,35,130,0.18) 48%, transparent 70%),
-        radial-gradient(ellipse 55% 70% at 85% 65%, rgba(14,50,165,0.30) 0%, rgba(6,26,105,0.12) 50%, transparent 68%),
-        radial-gradient(ellipse 60% 35% at 50% 92%, rgba(16,52,158,0.20) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 55% at 15% 25%, rgba(var(--aurora-1),0.42) 0%, rgba(var(--aurora-2),0.18) 48%, transparent 70%),
+        radial-gradient(ellipse 55% 70% at 85% 65%, rgba(var(--aurora-1),0.30) 0%, rgba(var(--aurora-2),0.12) 50%, transparent 68%),
+        radial-gradient(ellipse 60% 35% at 50% 92%, rgba(var(--aurora-1),0.20) 0%, transparent 60%);
     opacity: 0;
     animation: auroraPulseA 80s cubic-bezier(0.35,0,0.65,1) infinite;
 }
@@ -100,8 +104,8 @@ html, body {
 #sp-root::after {
     z-index: -3;
     background:
-        radial-gradient(ellipse 65% 80% at 78% 12%, rgba(18,60,188,0.36) 0%, rgba(8,32,118,0.14) 52%, transparent 70%),
-        radial-gradient(ellipse 80% 45% at 8% 75%, rgba(22,68,178,0.28) 0%, rgba(10,38,120,0.10) 50%, transparent 65%);
+        radial-gradient(ellipse 65% 80% at 78% 12%, rgba(var(--aurora-1),0.36) 0%, rgba(var(--aurora-2),0.14) 52%, transparent 70%),
+        radial-gradient(ellipse 80% 45% at 8% 75%, rgba(var(--aurora-1),0.28) 0%, rgba(var(--aurora-2),0.10) 50%, transparent 65%);
     opacity: 0;
     animation: auroraPulseB 110s cubic-bezier(0.35,0,0.65,1) infinite;
 }
@@ -1692,3 +1696,103 @@ kbd {
 /* ── Static Stella accent marks (no animation) ─────────────────────────────── */
 /*  These sit in #sp-stars-bg but are hidden; markup kept for potential future use. */
 #sp-stars-bg { display: none; }
+
+/* ─────────────────────────────────────────────────────────────────
+   THEMES — override accent+surface+aurora tokens per data-theme
+   All themes share the same dark base (#020817). Only the colour
+   family changes. Every component uses the tokens, so nothing else
+   needs to be touched.
+───────────────────────────────────────────────────────────────── */
+
+/* — violet ————————————————————————————————————————————— */
+[data-theme="violet"] {
+    --accent:         #a78bfa;
+    --accent-glow:    rgba(167,139,250,0.30);
+    --accent-dim:     rgba(167,139,250,0.14);
+    --accent-subtle:  rgba(100,60,230,0.10);
+    --border:         rgba(100,60,230,0.18);
+    --border-focus:   rgba(167,139,250,0.55);
+    --surface-hover:  rgba(100,60,230,0.11);
+    --surface-active: rgba(167,139,250,0.14);
+    --aurora-1: 100,50,220;
+    --aurora-2: 65,28,170;
+}
+
+/* — teal ——————————————————————————————————————————————— */
+[data-theme="teal"] {
+    --accent:         #2dd4c4;
+    --accent-glow:    rgba(45,212,196,0.30);
+    --accent-dim:     rgba(45,212,196,0.14);
+    --accent-subtle:  rgba(20,170,155,0.10);
+    --border:         rgba(20,170,155,0.18);
+    --border-focus:   rgba(45,212,196,0.55);
+    --surface-hover:  rgba(20,170,155,0.11);
+    --surface-active: rgba(45,212,196,0.14);
+    --aurora-1: 12,160,148;
+    --aurora-2: 6,110,100;
+}
+
+/* — rose ——————————————————————————————————————————————— */
+[data-theme="rose"] {
+    --accent:         #f472b6;
+    --accent-glow:    rgba(244,114,182,0.30);
+    --accent-dim:     rgba(244,114,182,0.14);
+    --accent-subtle:  rgba(200,50,120,0.10);
+    --border:         rgba(200,50,120,0.18);
+    --border-focus:   rgba(244,114,182,0.55);
+    --surface-hover:  rgba(200,50,120,0.11);
+    --surface-active: rgba(244,114,182,0.14);
+    --aurora-1: 180,30,100;
+    --aurora-2: 130,12,68;
+}
+
+/* — amber —————————————————————————————————————————————— */
+[data-theme="amber"] {
+    --accent:         #fbbf24;
+    --accent-glow:    rgba(251,191,36,0.30);
+    --accent-dim:     rgba(251,191,36,0.14);
+    --accent-subtle:  rgba(200,150,10,0.10);
+    --border:         rgba(200,150,10,0.18);
+    --border-focus:   rgba(251,191,36,0.55);
+    --surface-hover:  rgba(200,150,10,0.11);
+    --surface-active: rgba(251,191,36,0.14);
+    --aurora-1: 180,120,8;
+    --aurora-2: 140,85,4;
+}
+
+/* — emerald ——————————————————————————————————————————— */
+[data-theme="emerald"] {
+    --accent:         #34d399;
+    --accent-glow:    rgba(52,211,153,0.30);
+    --accent-dim:     rgba(52,211,153,0.14);
+    --accent-subtle:  rgba(20,170,100,0.10);
+    --border:         rgba(20,170,100,0.18);
+    --border-focus:   rgba(52,211,153,0.55);
+    --surface-hover:  rgba(20,170,100,0.11);
+    --surface-active: rgba(52,211,153,0.14);
+    --aurora-1: 12,160,90;
+    --aurora-2: 6,114,60;
+}
+
+/* ── Theme picker (rendered in settings panel) ──────────────────────────────── */
+.theme-swatch-row {
+    display: flex;
+    gap: 10px;
+    padding: 8px 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.theme-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition: outline-color var(--t-base), transform var(--t-fast);
+    flex-shrink: 0;
+}
+.theme-swatch:hover                   { transform: scale(1.15); }
+.theme-swatch[aria-pressed="true"]    { outline-color: var(--text); }

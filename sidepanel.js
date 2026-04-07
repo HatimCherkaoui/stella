@@ -9,6 +9,29 @@ const chatStore = (typeof chrome !== 'undefined' && chrome.storage?.local)
     ? chrome.storage.local
     : { get: (_k, cb) => cb({}), set: () => {} };
 
+// ── Themes ──────────────────────────────────────────────────────────────────
+const THEMES = [
+    { id: 'blue',    label: 'Blue',    color: '#6aa3f8' },
+    { id: 'violet',  label: 'Violet',  color: '#a78bfa' },
+    { id: 'teal',    label: 'Teal',    color: '#2dd4c4' },
+    { id: 'rose',    label: 'Rose',    color: '#f472b6' },
+    { id: 'amber',   label: 'Amber',   color: '#fbbf24' },
+    { id: 'emerald', label: 'Emerald', color: '#34d399' },
+];
+
+function applyTheme(id) {
+    if (id && id !== 'blue') {
+        document.documentElement.dataset.theme = id;
+    } else {
+        delete document.documentElement.dataset.theme;
+    }
+    chatStore.set({ stellaTheme: id || 'blue' });
+    // Refresh the swatch pressed states if picker is open
+    document.querySelectorAll('.theme-swatch').forEach(el => {
+        el.setAttribute('aria-pressed', el.dataset.themeId === (id || 'blue') ? 'true' : 'false');
+    });
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let chatSessions      = [];
 let activeSdession    = null;
@@ -2011,6 +2034,33 @@ function buildSettingsBody() {
     const body = $('chat-settings-body');
     body.innerHTML = '';
 
+    // ── Appearance group ──
+    const appearGroup = document.createElement('div');
+    appearGroup.className = 'chat-settings-group';
+    appearGroup.appendChild(Object.assign(document.createElement('div'), {
+        className: 'chat-settings-group-title',
+        textContent: 'Appearance',
+    }));
+
+    const swatchRow = document.createElement('div');
+    swatchRow.className = 'theme-swatch-row';
+
+    const activeTheme = document.documentElement.dataset.theme || 'blue';
+    THEMES.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'theme-swatch';
+        btn.dataset.themeId = t.id;
+        btn.title = t.label;
+        btn.setAttribute('aria-label', `${t.label} theme`);
+        btn.setAttribute('aria-pressed', t.id === activeTheme ? 'true' : 'false');
+        btn.style.background = t.color;
+        btn.addEventListener('click', () => applyTheme(t.id));
+        swatchRow.appendChild(btn);
+    });
+
+    appearGroup.appendChild(swatchRow);
+    body.appendChild(appearGroup);
+
     // ── API Keys group ──
     const keysGroup = document.createElement('div');
     keysGroup.className = 'chat-settings-group';
@@ -2481,6 +2531,11 @@ function initChat() {
             }
         }
         updateModelPill();
+    });
+
+    // Restore saved theme
+    chatStore.get(['stellaTheme'], data => {
+        if (data.stellaTheme) applyTheme(data.stellaTheme);
     });
 
     // Load sessions and restore last active
