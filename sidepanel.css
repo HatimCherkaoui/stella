@@ -156,8 +156,8 @@ html, body {
 }
 #sp-logo svg {
     flex-shrink: 0;
-    color: var(--accent);
-    /* size set inline in HTML to match font cap-height (~13px) */
+    color: var(--text);
+    display: block;
 }
 
 #sp-header-right {
