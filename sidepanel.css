@@ -35,6 +35,8 @@ html, body {
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    position: relative;
+    isolation: isolate;
 }
 
 /* ── Header (compact) ─────────────────────────────────────────────────────── */
@@ -1516,12 +1518,19 @@ kbd {
 }
 
 .about-features li::before {
-    content: '✦';
+    content: '';
     position: absolute;
     left: 0;
-    font-size: 9px;
-    color: var(--accent);
-    top: 1px;
+    top: 2px;
+    width: 9px;
+    height: 11px;
+    background-color: var(--accent);
+    -webkit-mask-image: url('icons/stella.svg');
+    mask-image: url('icons/stella.svg');
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
 }
 
 .about-meta {
@@ -1597,3 +1606,30 @@ kbd {
 }
 
 .about-privacy-note a:hover { color: var(--text); }
+
+/* ── Background stars ─────────────────────────────────────────────────────── */
+#sp-stars-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.sp-star {
+    position: absolute;
+    background-color: #f0f4ff;
+    -webkit-mask-image: url('icons/stella.svg');
+    mask-image: url('icons/stella.svg');
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    opacity: 0;
+    animation: stellaTwinkle var(--dur, 4s) var(--delay, 0s) ease-in-out infinite;
+    will-change: opacity, transform;
+}
+
+@keyframes stellaTwinkle {
+    0%, 100% { opacity: 0;            transform: scale(0.8)  rotate(0deg);  }
+    45%, 55%  { opacity: var(--peak, 0.09); transform: scale(1.05) rotate(12deg); }
+}
