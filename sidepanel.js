@@ -1352,6 +1352,14 @@ async function _sendSingle(sess, text, injectTabContent = false, specificTabs = 
         '| injectTabContent:', injectTabContent,
         '| contexts:', (specificTabs ?? tabContexts).map(c => ({ id: c.tabId, title: c.title, chars: c.text?.length })),
         '| messages:', messages);
+
+    // Tag the last user message with the tab IDs being injected so that
+    // removing a tab from context can prune the messages that used it.
+    if (injectTabContent && ctxToUse.length > 0) {
+        const injectedIds = ctxToUse.map(c => c.tabId);
+        const lastUser = [...sess.messages].reverse().find(m => m.role === 'user');
+        if (lastUser) lastUser._tabIds = injectedIds;
+    }
     const typingEl   = createTypingIndicator(activeProvider);
     abortController  = new AbortController();
     setStreaming(true);
@@ -1454,6 +1462,10 @@ async function _sendSingle(sess, text, injectTabContent = false, specificTabs = 
                 cost, ms,
                 ts:         Date.now(),
             };
+            // Mirror the tab tag so pruning removes this response alongside its question.
+            if (injectTabContent && ctxToUse.length > 0) {
+                msg._tabIds = ctxToUse.map(c => c.tabId);
+            }
             sess.messages.push(msg);
             sess.tokensIn  += usage.in  || 0;
             sess.tokensOut += usage.out || 0;
@@ -1502,6 +1514,14 @@ async function _sendMultiAgent(sess, text, injectTabContent = false, specificTab
     }
 
     const messages    = buildMessages(sess, injectTabContent, specificTabs);
+
+    // Tag the last user message with injected tab IDs (same as _sendSingle).
+    if (injectTabContent && ctxToUse.length > 0) {
+        const injectedIds = ctxToUse.map(c => c.tabId);
+        const lastUser = [...sess.messages].reverse().find(m => m.role === 'user');
+        if (lastUser) lastUser._tabIds = injectedIds;
+    }
+
     const compareRow  = document.createElement('div');
     compareRow.className = 'chat-compare-row';
     const msgList = $('chat-messages');
@@ -1553,7 +1573,7 @@ async function _sendMultiAgent(sess, text, injectTabContent = false, specificTab
                 const ms   = Date.now() - t0;
                 const cost = estimateCost(provider, modelId, usage.in, usage.out);
                 colFooter.textContent = `${formatTokens(usage.in)} in · ${formatTokens(usage.out)} out${cost ? ' · ' + cost : ''} · ${(ms/1000).toFixed(1)}s`;
-                sess.messages.push({
+                const assistantMsg = {
                     id:         `m_${Date.now()}_${provider}`,
                     role:       'assistant',
                     content:    fullText,
@@ -1564,7 +1584,11 @@ async function _sendMultiAgent(sess, text, injectTabContent = false, specificTab
                     tokensOut:  usage.out || 0,
                     cost, ms,
                     ts:         Date.now(),
-                });
+                };
+                if (injectTabContent && ctxToUse.length > 0) {
+                    assistantMsg._tabIds = ctxToUse.map(c => c.tabId);
+                }
+                sess.messages.push(assistantMsg);
                 sess.tokensIn  += usage.in  || 0;
                 sess.tokensOut += usage.out || 0;
             },
@@ -2368,11 +2392,26 @@ function showTabContextPill(title) { updateContextPill(); }
 
 function clearTabContext() {
     tabContexts = [];
+    // Remove all tab-scoped messages from the active session so the model
+    // no longer has those exchanges in its context window.
+    const sess = getActiveSession();
+    if (sess && sess.messages.some(m => m._tabIds?.length)) {
+        sess.messages = sess.messages.filter(m => !m._tabIds?.length);
+        renderSessionMessages(sess);
+        saveSessions();
+    }
     updateContextPill();
 }
 
 function removeTabFromContext(tabId) {
     tabContexts = tabContexts.filter(c => c.tabId !== tabId);
+    // Remove any message pairs that were generated using this tab's content.
+    const sess = getActiveSession();
+    if (sess && sess.messages.some(m => m._tabIds?.includes(tabId))) {
+        sess.messages = sess.messages.filter(m => !m._tabIds?.includes(tabId));
+        renderSessionMessages(sess);
+        saveSessions();
+    }
     updateContextPill();
 }
 
