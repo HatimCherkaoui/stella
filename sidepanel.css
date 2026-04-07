@@ -1706,6 +1706,8 @@ kbd {
 
 /* — violet ————————————————————————————————————————————— */
 [data-theme="violet"] {
+    --bg:             #080612;
+    --surface:        rgba(8,6,18,0.96);
     --accent:         #a78bfa;
     --accent-glow:    rgba(167,139,250,0.30);
     --accent-dim:     rgba(167,139,250,0.14);
@@ -1720,6 +1722,8 @@ kbd {
 
 /* — teal ——————————————————————————————————————————————— */
 [data-theme="teal"] {
+    --bg:             #011210;
+    --surface:        rgba(1,18,16,0.96);
     --accent:         #2dd4c4;
     --accent-glow:    rgba(45,212,196,0.30);
     --accent-dim:     rgba(45,212,196,0.14);
@@ -1734,6 +1738,8 @@ kbd {
 
 /* — rose ——————————————————————————————————————————————— */
 [data-theme="rose"] {
+    --bg:             #120208;
+    --surface:        rgba(18,2,8,0.96);
     --accent:         #f472b6;
     --accent-glow:    rgba(244,114,182,0.30);
     --accent-dim:     rgba(244,114,182,0.14);
@@ -1748,6 +1754,8 @@ kbd {
 
 /* — amber —————————————————————————————————————————————— */
 [data-theme="amber"] {
+    --bg:             #110a01;
+    --surface:        rgba(17,10,1,0.96);
     --accent:         #fbbf24;
     --accent-glow:    rgba(251,191,36,0.30);
     --accent-dim:     rgba(251,191,36,0.14);
@@ -1762,6 +1770,8 @@ kbd {
 
 /* — emerald ——————————————————————————————————————————— */
 [data-theme="emerald"] {
+    --bg:             #020e07;
+    --surface:        rgba(2,14,7,0.96);
     --accent:         #34d399;
     --accent-glow:    rgba(52,211,153,0.30);
     --accent-dim:     rgba(52,211,153,0.14);
