@@ -763,6 +763,133 @@ function _navigatePopup(popup, direction) {
     items[_popupActiveIdx]?.scrollIntoView({ block: 'nearest' });
 }
 
+// ── No-context tab picker ─────────────────────────────────────────────────────
+// Rule F: user's message refers to a tab but no tab is in context.
+// Force the user to pick one before the AI is called.
+async function showNoContextTabPicker(originalText, sess) {
+    const msgList = $('chat-messages');
+    const empty   = $('chat-empty');
+    if (empty) empty.style.display = 'none';
+
+    const wrap   = document.createElement('div');
+    wrap.className = 'chat-msg assistant';
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble sp-tab-disambig';
+    bubble.style.cssText = 'border-color:rgba(244,169,50,0.35);';
+
+    // ── proceed helper (read + send) ─────────────────────────────────────────
+    const proceedWithTab = async (tabId, tabTitle, pickerItemEl) => {
+        const alreadyCtx = tabContexts.find(c => c.tabId === tabId);
+        if (alreadyCtx) {
+            wrap.remove();
+            await _dispatchSend(sess, originalText, [alreadyCtx]);
+            return;
+        }
+        if (pickerItemEl) {
+            pickerItemEl.closest('.sp-tab-disambig-picker')
+                ?.querySelectorAll('button').forEach(b => { b.disabled = true; });
+            pickerItemEl.textContent = 'Reading\u2026';
+        }
+        const loadingEl = createReadingBubble();
+        try {
+            const data = await bgReadTab(tabId);
+            addTabToContext(tabId, data);
+            loadingEl.remove();
+            wrap.remove();
+            const ctx = tabContexts.find(c => c.tabId === tabId);
+            await _dispatchSend(sess, originalText, ctx ? [ctx] : null);
+        } catch (e) {
+            loadingEl.remove();
+            wrap.remove();
+            appendErrorBubble(`Could not read "${tabTitle}": ${e.message}`);
+            const sb = $('chat-send-btn'), inp = $('chat-input');
+            if (sb)  sb.disabled  = !inp?.value.trim();
+            if (inp) { inp.disabled = false; inp.focus(); }
+        }
+    };
+
+    // ── helper: dispatch to AI after tab is ready ────────────────────────────
+    async function _dispatchSend(s, text, specificTabsChoice) {
+        const sendBtn = $('chat-send-btn');
+        const input   = $('chat-input');
+        if (sendBtn) sendBtn.disabled = true;
+        if (input)   input.disabled  = true;
+        const currentSess = getActiveSession() || s;
+        if (multiAgentEnabled && selectedAgents.size >= 2) {
+            await _sendMultiAgent(currentSess, text, true, specificTabsChoice);
+        } else {
+            await _sendSingle(currentSess, text, true, specificTabsChoice);
+        }
+        updateStatsBar(currentSess);
+        saveSessions();
+        if (sendBtn) sendBtn.disabled = !$('chat-input')?.value.trim();
+        if (input)   { input.disabled = false; input.focus(); }
+    }
+
+    // ── Header ───────────────────────────────────────────────────────────────
+    const question = document.createElement('p');
+    question.style.cssText = 'margin:0 0 10px;color:var(--text);font-size:12.5px;';
+    question.textContent = 'Your question refers to a tab, but no tab is in context. Which tab do you mean?';
+    bubble.appendChild(question);
+
+    // ── Fetch open tabs ───────────────────────────────────────────────────────
+    let openTabs = [];
+    let fetchFailed = false;
+    try {
+        openTabs = (await chrome.tabs.query({ windowId: await getBrowserWindowId() }))
+            .filter(t => isReadableUrl(t.url));
+    } catch { fetchFailed = true; }
+
+    if (fetchFailed || !openTabs.length) {
+        const msg = document.createElement('p');
+        msg.style.cssText = 'font-size:12px;color:var(--text-muted);margin:0 0 10px;';
+        msg.textContent = fetchFailed
+            ? 'Could not read the list of open tabs. Make sure Stella has tab permissions.'
+            : 'No readable tabs are currently open in Chrome. Open a web page and try again.';
+        bubble.appendChild(msg);
+    } else {
+        const hdr = document.createElement('p');
+        hdr.style.cssText = 'font-size:11px;color:var(--text-muted);margin:0 0 5px;';
+        hdr.textContent = 'Select a tab to add to context:';
+        bubble.appendChild(hdr);
+
+        const pickerWrap = document.createElement('div');
+        pickerWrap.className = 'sp-tab-disambig-picker';
+
+        for (const tab of openTabs) {
+            const item = document.createElement('button');
+            item.className = 'sp-tab-disambig-open-item';
+            let hostname = '';
+            try { hostname = new URL(tab.url).hostname.replace(/^www\./, ''); } catch {}
+            item.innerHTML = `<span class="sp-tab-disambig-open-title">${escHtml(_clampStr(tab.title || hostname, 40))}</span>`
+                           + `<span class="sp-tab-disambig-open-host">${escHtml(hostname)}</span>`;
+            item.addEventListener('click', () => proceedWithTab(tab.id, tab.title, item));
+            pickerWrap.appendChild(item);
+        }
+        bubble.appendChild(pickerWrap);
+    }
+
+    // ── Cancel ───────────────────────────────────────────────────────────────
+    const footRow = document.createElement('div');
+    footRow.className = 'sp-tab-disambig-row';
+    footRow.style.marginTop = '10px';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'sp-tab-disambig-btn cancel';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => {
+        wrap.remove();
+        const sb = $('chat-send-btn'), inp = $('chat-input');
+        if (sb)  sb.disabled  = !inp?.value.trim();
+        if (inp) { inp.disabled = false; inp.focus(); }
+    });
+    footRow.appendChild(cancelBtn);
+    bubble.appendChild(footRow);
+
+    wrap.appendChild(bubble);
+    msgList.appendChild(wrap);
+    msgList.scrollTop = msgList.scrollHeight;
+}
+
 // ── Tab ambiguity dialog ──────────────────────────────────────────────────────
 // Shown when the routing would auto-inject context tab(s) (Rules A/D) so the
 // user can confirm they mean the tab in context, or switch to a different tab.
@@ -1098,6 +1225,8 @@ async function sendMessage(text) {
     //           with tabs already in context                    → inject all context tabs.
     // Rule E — General question (capital of France, etc.)       → no SOURCE injection;
     //           answer from model's own knowledge.
+    // Rule F — Generic content query with NO context tab        → force tab selection;
+    //           the model NEVER answers a tab question without real tab content.
     //
     let injectTabContent = false;
     let specificTabs     = null;  // null = use all tabContexts; array = use only these
@@ -1144,6 +1273,14 @@ async function sendMessage(text) {
         } else if (isTabContentQuery(text) && tabContexts.length > 0) {
             // Rule D — generic content question with tabs in context
             injectTabContent = true;
+        } else if (isTabContentQuery(text)) {
+            // Rule F — tab-referencing query but NO context tab → force the user to
+            // pick which tab they mean before any AI call is made (prevents hallucination).
+            showNoContextTabPicker(text.trim(), sess);
+            saveSessions();
+            if (sendBtn) sendBtn.disabled = !input?.value.trim();
+            if (input)   { input.disabled = false; input.focus(); }
+            return;
         }
         // else Rule E — general question, injectTabContent stays false
     }
