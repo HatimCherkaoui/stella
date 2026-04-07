@@ -80,7 +80,7 @@ html, body {
 #sp-root::after {
     content: '';
     position: absolute;
-    inset: -12%;
+    inset: -22%;
     pointer-events: none;
     will-change: opacity;
 }
