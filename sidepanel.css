@@ -151,6 +151,16 @@ html, body {
     border-color: rgba(255,255,255,0.2);
 }
 
+/* No API key state — amber prompt */
+.chat-model-pill.no-key {
+    border-color: rgba(244,169,50,0.55);
+    color: #f4a932;
+}
+.chat-model-pill.no-key:hover {
+    border-color: rgba(244,169,50,0.85);
+    background: rgba(244,169,50,0.07);
+}
+
 .chat-provider-dot {
     width: 8px;
     height: 8px;
@@ -161,6 +171,7 @@ html, body {
 .chat-provider-dot[data-provider=anthropic] { background:#c96442; box-shadow:0 0 5px rgba(201,100,66,0.5);  }
 .chat-provider-dot[data-provider=google]    { background:#4285f4; box-shadow:0 0 5px rgba(66,133,244,0.5);   }
 .chat-provider-dot[data-provider=mistral]   { background:#f4a932; box-shadow:0 0 5px rgba(244,169,50,0.5);  }
+.chat-provider-dot[data-provider=none]      { background:rgba(255,255,255,0.2); box-shadow:none; }
 
 .chat-caret {
     opacity: 0.5;
@@ -233,7 +244,10 @@ html, body {
 }
 .chat-model-option:hover    { background: rgba(255,255,255,0.07); }
 .chat-model-option.selected { background: rgba(232,66,66,0.13); color: var(--accent); padding: 8px 11px; }
-.chat-model-option.disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+/* No-key options are clickable (routes to key entry) but visually dimmed */
+.chat-model-option.no-key   { opacity: 0.5; cursor: pointer; }
+.chat-model-option.no-key:hover { opacity: 0.85; background: rgba(255,255,255,0.05); }
+.chat-model-option.no-key::after { content: 'Add key'; font-size: 9.5px; margin-left: auto; color: #f4a932; font-weight: 400; }
 
 .chat-ctx-badge {
     margin-left: auto;
@@ -1264,6 +1278,21 @@ a.md-link:hover {
     display: flex; align-items: center; gap: 6px;
     padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.04);
     flex-wrap: wrap;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+@keyframes key-row-highlight {
+    0%   { background: rgba(244,169,50,0.18); }
+    65%  { background: rgba(244,169,50,0.18); }
+    100% { background: transparent; }
+}
+.chat-key-row.highlight {
+    animation: key-row-highlight 1.6s ease-out forwards;
+}
+.chat-key-row.highlight .chat-key-input {
+    border-color: rgba(244,169,50,0.6);
+    background: rgba(244,169,50,0.05);
 }
 
 .chat-key-label {

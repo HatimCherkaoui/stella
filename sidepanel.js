@@ -1384,7 +1384,7 @@ function buildModelDropdown() {
             row.className = 'chat-model-option';
             row.setAttribute('role', 'option');
             const hasKey = !!apiKeys[provKey];
-            if (!hasKey) row.classList.add('disabled');
+            if (!hasKey) row.classList.add('no-key');
             if (provKey === activeProvider && model.id === activeModelId) row.classList.add('selected');
 
             const dot = document.createElement('span');
@@ -1402,7 +1402,15 @@ function buildModelDropdown() {
             row.appendChild(ctx);
 
             row.addEventListener('click', () => {
-                if (!hasKey) return;
+                if (!hasKey) {
+                    // Pre-select this model so when the key is saved it activates
+                    activeProvider = provKey;
+                    activeModelId  = model.id;
+                    closeModelDropdown();
+                    openSettingsPanel();
+                    focusProviderKey(provKey);
+                    return;
+                }
                 activeProvider = provKey;
                 activeModelId  = model.id;
                 updateModelPill();
@@ -1415,11 +1423,20 @@ function buildModelDropdown() {
 }
 
 function updateModelPill() {
+    const pill    = $('chat-model-btn');
     const iconEl  = $('chat-model-icon');
     const labelEl = $('chat-model-label');
-    if (iconEl) iconEl.dataset.provider = activeProvider;
-    const modelInfo = AI_PROVIDERS[activeProvider]?.models.find(m => m.id === activeModelId);
-    if (labelEl) labelEl.textContent = modelInfo?.label || activeModelId;
+    const hasKey  = !!apiKeys[activeProvider];
+    if (pill)    pill.classList.toggle('no-key', !hasKey);
+    if (iconEl)  iconEl.dataset.provider = hasKey ? activeProvider : 'none';
+    if (labelEl) {
+        if (!hasKey) {
+            labelEl.textContent = 'Select model';
+        } else {
+            const modelInfo = AI_PROVIDERS[activeProvider]?.models.find(m => m.id === activeModelId);
+            labelEl.textContent = modelInfo?.label || activeModelId;
+        }
+    }
 }
 
 function openModelDropdown() {
@@ -1621,6 +1638,21 @@ function closeSettingsPanel() {
     $('chat-settings-panel').classList.add('hidden');
 }
 
+// Scroll to and highlight the API key input for a given provider inside settings.
+function focusProviderKey(provKey) {
+    requestAnimationFrame(() => {
+        const body = $('chat-settings-body');
+        if (!body) return;
+        const row = body.querySelector(`.chat-key-row[data-provider="${provKey}"]`);
+        if (!row) return;
+        row.classList.add('highlight');
+        row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        const input = row.querySelector('.chat-key-input');
+        if (input) { input.focus(); input.select(); }
+        setTimeout(() => row.classList.remove('highlight'), 1600);
+    });
+}
+
 function buildSettingsBody() {
     const body = $('chat-settings-body');
     body.innerHTML = '';
@@ -1637,6 +1669,7 @@ function buildSettingsBody() {
     for (const [provKey, prov] of Object.entries(AI_PROVIDERS)) {
         const row = document.createElement('div');
         row.className = 'chat-key-row';
+        row.dataset.provider = provKey;
 
         const label = document.createElement('div');
         label.className = 'chat-key-label';
@@ -1687,8 +1720,8 @@ function buildSettingsBody() {
                 if (!hadKey && provKey !== activeProvider) {
                     activeProvider = provKey;
                     activeModelId  = AI_PROVIDERS[provKey].models[0].id;
-                    updateModelPill();
                 }
+                updateModelPill();
                 rebuildDropdownIfOpen();
             } else {
                 status.textContent = '✗';
@@ -1711,8 +1744,8 @@ function buildSettingsBody() {
             if (key && !hadKey && provKey !== activeProvider) {
                 activeProvider = provKey;
                 activeModelId  = AI_PROVIDERS[provKey].models[0].id;
-                updateModelPill();
             }
+            updateModelPill();
             rebuildDropdownIfOpen();
         });
 
