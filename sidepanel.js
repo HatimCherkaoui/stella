@@ -763,6 +763,166 @@ function _navigatePopup(popup, direction) {
     items[_popupActiveIdx]?.scrollIntoView({ block: 'nearest' });
 }
 
+// ── Tab ambiguity dialog ──────────────────────────────────────────────────────
+// Shown when the routing would auto-inject context tab(s) (Rules A/D) so the
+// user can confirm they mean the tab in context, or switch to a different tab.
+async function showTabAmbiguityDialog(originalText, sess) {
+    const msgList = $('chat-messages');
+    const empty   = $('chat-empty');
+    if (empty) empty.style.display = 'none';
+
+    const wrap   = document.createElement('div');
+    wrap.className = 'chat-msg assistant';
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble sp-tab-disambig';
+    bubble.style.cssText = 'border-color:rgba(66,133,244,0.3);';
+
+    // ── shared proceed helper ────────────────────────────────────────────────
+    const proceed = async (specificTabsChoice) => {
+        wrap.remove();
+        const sendBtn = $('chat-send-btn');
+        const input   = $('chat-input');
+        if (sendBtn) sendBtn.disabled = true;
+        if (input)   input.disabled  = true;
+        const currentSess = getActiveSession() || sess;
+        if (multiAgentEnabled && selectedAgents.size >= 2) {
+            await _sendMultiAgent(currentSess, originalText, true, specificTabsChoice);
+        } else {
+            await _sendSingle(currentSess, originalText, true, specificTabsChoice);
+        }
+        updateStatsBar(currentSess);
+        saveSessions();
+        if (sendBtn) sendBtn.disabled = !$('chat-input')?.value.trim();
+        if (input)   { input.disabled = false; input.focus(); }
+    };
+
+    // ── Question ─────────────────────────────────────────────────────────────
+    const question = document.createElement('p');
+    question.style.cssText = 'margin:0 0 10px;color:var(--text);font-size:12.5px;';
+    const ctxCount  = tabContexts.length;
+    const firstName = ctxCount === 1 ? _clampStr(tabContexts[0].title || tabContexts[0].url, 45) : null;
+    question.textContent = firstName
+        ? `Your question mentions a tab. Did you mean "${firstName}"?`
+        : `Your question mentions a tab. Which of your ${ctxCount} context tabs did you mean?`;
+    bubble.appendChild(question);
+
+    // ── Buttons row ──────────────────────────────────────────────────────────
+    const row = document.createElement('div');
+    row.className = 'sp-tab-disambig-row';
+    bubble.appendChild(row);
+
+    const tabIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+    const tabsIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`;
+
+    // One button per context tab
+    for (const ctx of tabContexts) {
+        const btn = document.createElement('button');
+        btn.className = 'sp-tab-disambig-btn ctx';
+        btn.title = ctx.url || '';
+        btn.innerHTML = `${tabIcon} ${escHtml(_clampStr(ctx.title || ctx.url || 'Tab', 32))}`;
+        btn.addEventListener('click', () => proceed([ctx]));
+        row.appendChild(btn);
+    }
+
+    // "Different tab" picker button
+    const pickBtn = document.createElement('button');
+    pickBtn.className = 'sp-tab-disambig-btn pick';
+    pickBtn.innerHTML = `${tabsIcon} Different tab`;
+    row.appendChild(pickBtn);
+
+    // Cancel
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'sp-tab-disambig-btn cancel';
+    cancelBtn.textContent = 'Cancel';
+    row.appendChild(cancelBtn);
+
+    // ── Open-tabs picker (revealed on "Different tab") ────────────────────
+    const pickerWrap = document.createElement('div');
+    pickerWrap.className = 'sp-tab-disambig-picker hidden';
+    bubble.appendChild(pickerWrap);
+
+    pickBtn.addEventListener('click', async () => {
+        if (!pickerWrap.classList.contains('hidden')) return;
+        pickBtn.disabled    = true;
+        pickBtn.textContent = 'Loading\u2026';
+        let openTabs = [];
+        try {
+            openTabs = (await chrome.tabs.query({ windowId: await getBrowserWindowId() }))
+                .filter(t => isReadableUrl(t.url));
+        } catch { /* extension API unavailable */ }
+        pickBtn.disabled = false;
+        pickBtn.innerHTML = `${tabsIcon} Different tab`;
+
+        pickerWrap.innerHTML = '';
+        if (!openTabs.length) {
+            const none = document.createElement('p');
+            none.style.cssText = 'font-size:11.5px;color:var(--text-muted);margin:8px 0 0;';
+            none.textContent = 'No other readable tabs open.';
+            pickerWrap.appendChild(none);
+            pickerWrap.classList.remove('hidden');
+            msgList.scrollTop = msgList.scrollHeight;
+            return;
+        }
+
+        const hdr = document.createElement('p');
+        hdr.style.cssText = 'font-size:11px;color:var(--text-muted);margin:8px 0 4px;';
+        hdr.textContent = 'Select a tab to use:';
+        pickerWrap.appendChild(hdr);
+
+        for (const tab of openTabs) {
+            const item = document.createElement('button');
+            item.className = 'sp-tab-disambig-open-item';
+            let hostname = '';
+            try { hostname = new URL(tab.url).hostname.replace(/^www\./, ''); } catch {}
+            item.innerHTML = `<span class="sp-tab-disambig-open-title">${escHtml(_clampStr(tab.title || hostname, 40))}</span>`
+                           + `<span class="sp-tab-disambig-open-host">${escHtml(hostname)}</span>`;
+
+            item.addEventListener('click', async () => {
+                pickerWrap.querySelectorAll('button').forEach(b => { b.disabled = true; });
+                item.textContent = 'Reading\u2026';
+                const alreadyCtx = tabContexts.find(c => c.tabId === tab.id);
+                if (alreadyCtx) { await proceed([alreadyCtx]); return; }
+                const loadingEl = createReadingBubble();
+                try {
+                    const data = await bgReadTab(tab.id);
+                    addTabToContext(tab.id, data);
+                    loadingEl.remove();
+                    const ctx = tabContexts.find(c => c.tabId === tab.id);
+                    await proceed(ctx ? [ctx] : null);
+                } catch (e) {
+                    loadingEl.remove();
+                    appendErrorBubble(`Could not read "${tab.title}": ${e.message}`);
+                    wrap.remove();
+                    const sb = $('chat-send-btn'), inp = $('chat-input');
+                    if (sb)  sb.disabled  = !inp?.value.trim();
+                    if (inp) { inp.disabled = false; inp.focus(); }
+                }
+            });
+            pickerWrap.appendChild(item);
+        }
+        pickerWrap.classList.remove('hidden');
+        msgList.scrollTop = msgList.scrollHeight;
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        wrap.remove();
+        appendConfirmBubble('Cancelled.');
+        const sb = $('chat-send-btn'), inp = $('chat-input');
+        if (sb)  sb.disabled  = !inp?.value.trim();
+        if (inp) { inp.disabled = false; inp.focus(); }
+    });
+
+    wrap.appendChild(bubble);
+    msgList.appendChild(wrap);
+    msgList.scrollTop = msgList.scrollHeight;
+}
+
+// Clamp a string to maxLen chars with an ellipsis.
+function _clampStr(str, maxLen) {
+    if (!str) return '';
+    return str.length > maxLen ? str.slice(0, maxLen - 1) + '\u2026' : str;
+}
+
 // ── Permission bubble — ask user before reading a tab ────────────────────────
 async function askTabReadPermission(originalText, sess) {
     // Resolve current tab NOW and lock it in — do not re-query on button click.
@@ -989,6 +1149,17 @@ async function sendMessage(text) {
     }
 
     // ── Step 3: send to AI ──────────────────────────────────────────────────
+    // When Rules A or D would auto-inject the context tab(s) (specificTabs is
+    // still null — user has not explicitly named a different tab via Rule C),
+    // ask which tab they mean before proceeding.
+    if (injectTabContent && specificTabs === null) {
+        showTabAmbiguityDialog(text.trim(), sess);
+        saveSessions();
+        if (sendBtn) sendBtn.disabled = !input?.value.trim();
+        if (input)   { input.disabled = false; input.focus(); }
+        return;
+    }
+
     if (multiAgentEnabled && selectedAgents.size >= 2) {
         await _sendMultiAgent(sess, text.trim(), injectTabContent, specificTabs);
     } else {

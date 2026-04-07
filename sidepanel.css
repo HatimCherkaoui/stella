@@ -1345,6 +1345,101 @@ a.md-link:hover {
     border-color: rgba(232,66,66,0.7);
 }
 
+/* ── Tab ambiguity dialog ──────────────────────────────────────────────────── */
+.sp-tab-disambig { display: flex; flex-direction: column; gap: 0; }
+
+.sp-tab-disambig-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* Base style shared by all buttons in the dialog */
+.sp-tab-disambig-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 8px;
+    padding: 5px 11px;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.14s, border-color 0.14s, opacity 0.12s;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.sp-tab-disambig-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+/* "Yes, [context tab]" — blue/green confirm */
+.sp-tab-disambig-btn.ctx {
+    background: rgba(66,133,244,0.12);
+    border-color: rgba(66,133,244,0.35);
+    color: #7aadff;
+}
+.sp-tab-disambig-btn.ctx:hover {
+    background: rgba(66,133,244,0.22);
+    border-color: rgba(66,133,244,0.6);
+}
+
+/* "Different tab" — neutral */
+.sp-tab-disambig-btn.pick {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.14);
+    color: var(--text-muted);
+}
+.sp-tab-disambig-btn.pick:hover {
+    background: rgba(255,255,255,0.11);
+    color: var(--text);
+}
+
+/* Cancel */
+.sp-tab-disambig-btn.cancel {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+.sp-tab-disambig-btn.cancel:hover { opacity: 1; color: var(--text); }
+
+/* Open-tabs picker list */
+.sp-tab-disambig-picker { display: flex; flex-direction: column; gap: 2px; }
+.sp-tab-disambig-picker.hidden { display: none; }
+
+.sp-tab-disambig-open-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 7px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: background 0.12s;
+    color: var(--text);
+}
+.sp-tab-disambig-open-item:hover {
+    background: rgba(66,133,244,0.12);
+    border-color: rgba(66,133,244,0.3);
+}
+.sp-tab-disambig-open-item:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+.sp-tab-disambig-open-title {
+    font-size: 11.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+.sp-tab-disambig-open-host {
+    font-size: 10px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */
 * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
 *::-webkit-scrollbar       { width: 4px; height: 4px; }
