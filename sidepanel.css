@@ -1324,6 +1324,27 @@ a.md-link:hover {
 .chat-key-status.err  { color: var(--accent); }
 .chat-key-status.busy { color: var(--text-muted); }
 
+/* "Add key →" action button inside error bubbles */
+.chat-error-settings-btn {
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(232,66,66,0.15);
+    border: 1px solid rgba(232,66,66,0.4);
+    border-radius: 8px;
+    padding: 5px 12px;
+    color: var(--accent);
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    width: 100%;
+    text-align: center;
+}
+.chat-error-settings-btn:hover {
+    background: rgba(232,66,66,0.28);
+    border-color: rgba(232,66,66,0.7);
+}
+
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */
 * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; }
 *::-webkit-scrollbar       { width: 4px; height: 4px; }

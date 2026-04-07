@@ -1019,7 +1019,10 @@ function setStreaming(on) {
 async function _sendSingle(sess, text, injectTabContent = false, specificTabs = null) {
     const key = apiKeys[activeProvider];
     if (!key) {
-        appendErrorBubble(`No API key for ${AI_PROVIDERS[activeProvider]?.label || activeProvider}. Add one in Settings.`);
+        appendErrorBubble(
+            `No API key for ${AI_PROVIDERS[activeProvider]?.label || activeProvider}. Add one in Settings.`,
+            activeProvider
+        );
         return;
     }
 
@@ -1174,7 +1177,10 @@ async function _sendMultiAgent(sess, text, injectTabContent = false, specificTab
     const missing = agents.filter(a => !apiKeys[a.provider]);
     if (missing.length) {
         const names = missing.map(a => AI_PROVIDERS[a.provider]?.label || a.provider).join(', ');
-        appendErrorBubble(`Missing API keys for: ${names}. Add them in Settings.`);
+        appendErrorBubble(
+            `Missing API keys for: ${names}. Add them in Settings.`,
+            missing[0].provider
+        );
         return;
     }
 
@@ -1349,13 +1355,29 @@ using only that provided content — not your training data.`,
 }
 
 // ── Error bubble ──────────────────────────────────────────────────────────────
-function appendErrorBubble(text) {
+// Pass an optional `actionProvider` to render a clickable "Add key →" button
+// that opens Settings and scrolls to that provider's key input.
+function appendErrorBubble(text, actionProvider) {
     const msg   = $('chat-messages');
     const empty = $('chat-empty');
     if (empty) empty.style.display = 'none';
     const div = document.createElement('div');
     div.className = 'chat-msg assistant';
-    div.innerHTML = `<div class="chat-bubble" style="color:var(--accent);border-color:rgba(232,66,66,0.3);">${text}</div>`;
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    bubble.style.cssText = 'color:var(--accent);border-color:rgba(232,66,66,0.3);';
+    bubble.textContent = text;
+    if (actionProvider) {
+        const btn = document.createElement('button');
+        btn.className = 'chat-error-settings-btn';
+        btn.textContent = 'Add key \u2192';
+        btn.addEventListener('click', () => {
+            openSettingsPanel();
+            focusProviderKey(actionProvider);
+        });
+        bubble.appendChild(btn);
+    }
+    div.appendChild(bubble);
     msg.appendChild(div);
     msg.scrollTop = msg.scrollHeight;
 }
