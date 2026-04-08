@@ -18,8 +18,8 @@ const STELLA_CONFIG = {
     },
 
     links: {
-        repo:          'https://github.com/HatimCherkaoui/stella',
-        privacyPolicy: 'https://github.com/HatimCherkaoui/stella/blob/main/PRIVACY.md',
+        releases:      'https://github.com/HatimCherkaoui/stella-releases',
+        privacyPolicy: 'https://github.com/HatimCherkaoui/stella-releases/blob/main/PRIVACY.md',
         paypal:        'https://paypal.me/hcherkao',
     },
 

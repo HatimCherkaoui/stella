@@ -2520,7 +2520,7 @@ function initChat() {
     if (el('about-author-link'))  { el('about-author-link').href = STELLA_CONFIG.author.github; el('about-author-link').textContent = STELLA_CONFIG.author.name; }
     if (el('about-donate-link'))  el('about-donate-link').href          = STELLA_CONFIG.links.paypal;
     if (el('about-privacy-link')) el('about-privacy-link').href         = STELLA_CONFIG.links.privacyPolicy;
-    if (el('about-source-link'))  el('about-source-link').href          = STELLA_CONFIG.links.repo;
+    if (el('about-source-link'))  el('about-source-link').href          = STELLA_CONFIG.links.releases;
 
     // Load API keys
     loadApiKeys(keys => {
