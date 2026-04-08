@@ -392,9 +392,9 @@ function renderMessage(msg) {
             `<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>` +
             `<line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
 
-        const copyBtn     = Object.assign(document.createElement('button'), { className: 'msg-action-btn', title: 'Copy response',   innerHTML: SVG_COPY  });
-        const bookmarkBtn = Object.assign(document.createElement('button'), { className: 'msg-action-btn', title: 'Bookmark',         innerHTML: SVG_STAR  });
-        const shareBtn    = Object.assign(document.createElement('button'), { className: 'msg-action-btn', title: 'Share',            innerHTML: SVG_SHARE });
+        const copyBtn     = Object.assign(document.createElement('button'), { className: 'msg-action-btn',                    title: 'Copy response', innerHTML: SVG_COPY  });
+        const bookmarkBtn = Object.assign(document.createElement('button'), { className: 'msg-action-btn msg-bookmark-btn',   title: 'Bookmark',      innerHTML: SVG_STAR  });
+        const shareBtn    = Object.assign(document.createElement('button'), { className: 'msg-action-btn',                    title: 'Share',         innerHTML: SVG_SHARE });
         copyBtn.setAttribute('aria-label', 'Copy response');
         bookmarkBtn.setAttribute('aria-label', 'Bookmark response');
         shareBtn.setAttribute('aria-label', 'Share response');
@@ -2012,6 +2012,17 @@ function renderBookmarksList() {
             preview.className = 'bm-item-preview';
             preview.textContent = bm.text;
 
+            // Expand / collapse on click
+            const expandHint = document.createElement('div');
+            expandHint.className = 'bm-item-expand-hint';
+            expandHint.textContent = 'Click to expand';
+            const toggleExpand = () => {
+                const expanded = preview.classList.toggle('expanded');
+                expandHint.textContent = expanded ? 'Click to collapse' : 'Click to expand';
+            };
+            preview.addEventListener('click', toggleExpand);
+            expandHint.addEventListener('click', toggleExpand);
+
             const btnRow = document.createElement('div');
             btnRow.className = 'bm-item-actions';
 
@@ -2027,7 +2038,9 @@ function renderBookmarksList() {
                 loadBookmarks(all => {
                     saveBookmarks(all.filter(b => b.id !== bm.id));
                     renderBookmarksList();
-                    const msgEl = document.querySelector(`[data-msg-id="${CSS.escape(bm.id)}"]`);
+                    // Remove active star on the in-chat message bubble
+                    const safeId = bm.id.replace(/[\\^$.*+?()\[\]{}|]/g, '\\$&');
+                    const msgEl = document.querySelector(`[data-msg-id="${safeId}"]`);
                     msgEl?.querySelector('.msg-bookmark-btn')?.classList.remove('bookmarked');
                 });
             });
@@ -2036,6 +2049,7 @@ function renderBookmarksList() {
             btnRow.appendChild(delBtn);
             item.appendChild(meta);
             item.appendChild(preview);
+            item.appendChild(expandHint);
             item.appendChild(btnRow);
             list.appendChild(item);
         });
@@ -2971,6 +2985,30 @@ function initChat() {
     $('share-linkedin-btn').addEventListener('click', () => {
         const t = _shareText.length > 700 ? _shareText.slice(0, 700) + '…' : _shareText;
         window.open(`https://www.linkedin.com/sharing/share-offsite/?mini=true&summary=${encodeURIComponent(t)}`, '_blank', 'noopener,noreferrer');
+    });
+    $('share-facebook-btn').addEventListener('click', () => {
+        // Facebook sharer only accepts a URL; we open a composer with the text pre-filled via a data URI note
+        const t = _shareText.length > 500 ? _shareText.slice(0, 500) + '…' : _shareText;
+        window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(t)}&u=${encodeURIComponent('https://github.com/HatimCherkaoui/stella-releases')}`, '_blank', 'noopener,noreferrer');
+    });
+    $('share-threads-btn').addEventListener('click', () => {
+        const t = _shareText.length > 500 ? _shareText.slice(0, 500) + '…' : _shareText;
+        window.open(`https://threads.net/intent/post?text=${encodeURIComponent(t)}`, '_blank', 'noopener,noreferrer');
+    });
+    $('share-whatsapp-btn').addEventListener('click', () => {
+        const t = _shareText.length > 1000 ? _shareText.slice(0, 1000) + '…' : _shareText;
+        window.open(`https://wa.me/?text=${encodeURIComponent(t)}`, '_blank', 'noopener,noreferrer');
+    });
+    $('share-messenger-btn').addEventListener('click', () => {
+        // Messenger send dialog requires a URL; copy text and direct user to messenger.com
+        const t = _shareText.length > 500 ? _shareText.slice(0, 500) + '…' : _shareText;
+        navigator.clipboard.writeText(t).catch(() => {});
+        window.open('https://www.messenger.com/new', '_blank', 'noopener,noreferrer');
+    });
+    $('share-gmail-btn').addEventListener('click', () => {
+        const subject = encodeURIComponent('Shared via Stella AI');
+        const body = encodeURIComponent(_shareText.length > 2000 ? _shareText.slice(0, 2000) + '…' : _shareText);
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank', 'noopener,noreferrer');
     });
 
     // ── New chat ──
