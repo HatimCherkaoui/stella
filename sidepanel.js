@@ -1,3 +1,5 @@
+// Copyright © 2026 Hatim Cherkaoui. All rights reserved.
+// Unauthorized copying, modification, or distribution is strictly prohibited.
 'use strict';
 /* ── sidepanel.js ─────────────────────────────────────────────────────────────
    AI Chat + Tab Management for the Tabaisco Side Panel.

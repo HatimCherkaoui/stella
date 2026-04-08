@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest --testPathPatterns=tests/ --verbose",
     "build": "./build.sh",
+    "build:fast": "./build.sh --skip-tests --no-obfuscate",
     "build:skip-tests": "./build.sh --skip-tests",
+    "build:release": "./build.sh",
     "release": "./release.sh"
   },
   "jest": {
@@ -22,9 +24,10 @@
     "sidepanel"
   ],
   "author": "Hatim Cherkaoui",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "devDependencies": {
     "clean-css-cli": "^5.6.3",
+    "javascript-obfuscator": "^5.4.1",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "terser": "^5.46.1"

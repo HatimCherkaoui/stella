@@ -1,3 +1,5 @@
+// Copyright © 2026 Hatim Cherkaoui. All rights reserved.
+// Unauthorized copying, modification, or distribution is strictly prohibited.
 // Stella — background service worker (MV3)
 
 // Open side panel when toolbar icon is clicked

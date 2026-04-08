@@ -1,3 +1,5 @@
+// Copyright © 2026 Hatim Cherkaoui. All rights reserved.
+// Unauthorized copying, modification, or distribution is strictly prohibited.
 'use strict';
 /* ── ai-core.js ───────────────────────────────────────────────────────────────
    Provider config, API key storage, validation, and streaming adapters.
