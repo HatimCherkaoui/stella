@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Stella AI",
   "short_name": "Stella",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Stella — your persistent AI sidebar companion for Chrome. Chat with any AI model while you browse.",
   "action": {
     "default_title": "Open Stella AI",
