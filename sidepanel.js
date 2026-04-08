@@ -11,6 +11,7 @@ const chatStore = (typeof chrome !== 'undefined' && chrome.storage?.local)
 
 // ── Themes ──────────────────────────────────────────────────────────────────
 const THEMES = [
+    { id: 'system',  label: 'System',  color: null },   /* half-dark/half-light via CSS */
     { id: 'blue',    label: 'Blue',    color: '#6aa3f8' },
     { id: 'violet',  label: 'Violet',  color: '#a78bfa' },
     { id: 'teal',    label: 'Teal',    color: '#2dd4c4' },
@@ -19,16 +20,32 @@ const THEMES = [
     { id: 'emerald', label: 'Emerald', color: '#34d399' },
 ];
 
+// Live OS dark/light switch listener — only active when system theme is selected
+let _systemThemeMq = null;
+function _watchSystemTheme(enable) {
+    if (!_systemThemeMq) _systemThemeMq = window.matchMedia('(prefers-color-scheme: dark)');
+    // Remove any existing listener first
+    _systemThemeMq.removeEventListener('change', _onSystemThemeChange);
+    if (enable) _systemThemeMq.addEventListener('change', _onSystemThemeChange);
+}
+function _onSystemThemeChange() {
+    // No token changes needed — CSS media query handles it automatically.
+    // Just re-render the settings swatch states to keep UI consistent.
+    document.querySelectorAll('.theme-swatch').forEach(el => {
+        el.setAttribute('aria-pressed', el.dataset.themeId === 'system' ? 'true' : 'false');
+    });
+}
+
 function applyTheme(id) {
-    if (id && id !== 'blue') {
-        document.documentElement.dataset.theme = id;
-    } else {
+    const resolved = id || 'blue';
+    document.documentElement.dataset.theme = resolved === 'blue' ? '' : resolved;
+    if (!resolved || resolved === 'blue') {
         delete document.documentElement.dataset.theme;
     }
-    chatStore.set({ stellaTheme: id || 'blue' });
-    // Refresh the swatch pressed states if picker is open
+    chatStore.set({ stellaTheme: resolved });
+    _watchSystemTheme(resolved === 'system');
     document.querySelectorAll('.theme-swatch').forEach(el => {
-        el.setAttribute('aria-pressed', el.dataset.themeId === (id || 'blue') ? 'true' : 'false');
+        el.setAttribute('aria-pressed', el.dataset.themeId === resolved ? 'true' : 'false');
     });
 }
 
@@ -2053,7 +2070,7 @@ function buildSettingsBody() {
         btn.title = t.label;
         btn.setAttribute('aria-label', `${t.label} theme`);
         btn.setAttribute('aria-pressed', t.id === activeTheme ? 'true' : 'false');
-        btn.style.background = t.color;
+        if (t.color) btn.style.background = t.color; // system swatch color handled by CSS
         btn.addEventListener('click', () => applyTheme(t.id));
         swatchRow.appendChild(btn);
     });
@@ -2533,9 +2550,14 @@ function initChat() {
         updateModelPill();
     });
 
-    // Restore saved theme
+    // Restore saved theme — default to 'system' on very first run
     chatStore.get(['stellaTheme'], data => {
-        if (data.stellaTheme) applyTheme(data.stellaTheme);
+        if (data.stellaTheme) {
+            applyTheme(data.stellaTheme);
+        } else {
+            // First run: default to system theme so it matches the OS out of the box
+            applyTheme('system');
+        }
     });
 
     // Load sessions and restore last active

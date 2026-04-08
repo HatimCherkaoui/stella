@@ -1788,6 +1788,50 @@ kbd {
     --aurora-2: 6,114,60;
 }
 
+/* — system (auto: mirrors OS dark/light preference) ————————————— */
+/* Dark: keep the default blue-black base — no overrides needed */
+[data-theme="system"] {
+    /* intentionally empty in dark mode — :root defaults apply */
+}
+
+/* Light: override everything to a clean near-white OS-native palette */
+@media (prefers-color-scheme: light) {
+    [data-theme="system"] {
+        --bg:             #f5f7fa;
+        --text:           #0d1117;
+        --text-muted:     rgba(13,17,23,0.50);
+        --text-faint:     rgba(13,17,23,0.30);
+
+        --accent:         #1a6ef5;
+        --accent-glow:    rgba(26,110,245,0.20);
+        --accent-dim:     rgba(26,110,245,0.10);
+        --accent-subtle:  rgba(26,110,245,0.07);
+
+        --border:         rgba(13,17,23,0.10);
+        --border-focus:   rgba(26,110,245,0.50);
+
+        --surface:        rgba(255,255,255,0.98);
+        --surface-hover:  rgba(26,110,245,0.06);
+        --surface-active: rgba(26,110,245,0.10);
+
+        /* Hide aurora in light mode — blobs look odd on white */
+        --aurora-1: 0,0,0;
+        --aurora-2: 0,0,0;
+    }
+
+    /* Aurora invisible in light mode */
+    [data-theme="system"] #sp-root::before,
+    [data-theme="system"] #sp-root::after {
+        opacity: 0 !important;
+        animation: none;
+    }
+
+    /* Lift scrollbar thumb to match light surface */
+    [data-theme="system"] #chat-messages::-webkit-scrollbar-thumb {
+        background: rgba(13,17,23,0.14);
+    }
+}
+
 /* ── Theme picker (rendered in settings panel) ──────────────────────────────── */
 .theme-swatch-row {
     display: flex;
@@ -1808,5 +1852,11 @@ kbd {
     transition: outline-color var(--t-base), transform var(--t-fast);
     flex-shrink: 0;
 }
-.theme-swatch:hover                   { transform: scale(1.15); }
-.theme-swatch[aria-pressed="true"]    { outline-color: var(--text); }
+.theme-swatch:hover                { transform: scale(1.15); }
+.theme-swatch[aria-pressed="true"] { outline-color: var(--text); }
+
+/* System swatch — half dark / half light to communicate auto-switching */
+.theme-swatch[data-theme-id="system"] {
+    background: linear-gradient(135deg, #0d1117 50%, #f5f7fa 50%) !important;
+    border-color: var(--border);
+}
