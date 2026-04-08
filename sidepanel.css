@@ -1790,31 +1790,46 @@ kbd {
 
 /* — system (auto: mirrors OS dark/light preference) ————————————— */
 /* Dark: keep the default blue-black base — no overrides needed */
+/* System theme: use CSS system color keywords so base colours follow OS/Chrome
+   natively. color-scheme: light dark tells Chrome to pick the right palette.
+   Accent, glow and interactive surface tokens are still explicit (no system
+   colour equivalent exists for those) and split by media query.               */
 [data-theme="system"] {
-    /* intentionally empty in dark mode — :root defaults apply */
+    color-scheme: light dark;
+    --bg:          Canvas;
+    --text:        CanvasText;
+    --text-muted:  GrayText;
+    --text-faint:  GrayText;
+    --surface:     ButtonFace;
 }
 
-/* Light: override everything to a clean near-white OS-native palette */
+/* Dark OS/Chrome ─────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+    [data-theme="system"] {
+        --accent:         #6aa3f8;
+        --accent-glow:    rgba(106,163,248,0.30);
+        --accent-dim:     rgba(106,163,248,0.14);
+        --accent-subtle:  rgba(60,110,235,0.10);
+        --border:         rgba(255,255,255,0.08);
+        --border-focus:   rgba(106,163,248,0.55);
+        --surface-hover:  rgba(60,110,235,0.11);
+        --surface-active: rgba(106,163,248,0.14);
+        --aurora-1: 20,65,195;
+        --aurora-2: 10,36,120;
+    }
+}
+
+/* Light OS/Chrome ────────────────────────────────────────────────────────── */
 @media (prefers-color-scheme: light) {
     [data-theme="system"] {
-        --bg:             #f5f7fa;
-        --text:           #0d1117;
-        --text-muted:     rgba(13,17,23,0.50);
-        --text-faint:     rgba(13,17,23,0.30);
-
         --accent:         #1a6ef5;
         --accent-glow:    rgba(26,110,245,0.20);
         --accent-dim:     rgba(26,110,245,0.10);
         --accent-subtle:  rgba(26,110,245,0.07);
-
-        --border:         rgba(13,17,23,0.10);
+        --border:         rgba(0,0,0,0.10);
         --border-focus:   rgba(26,110,245,0.50);
-
-        --surface:        rgba(255,255,255,0.98);
         --surface-hover:  rgba(26,110,245,0.06);
         --surface-active: rgba(26,110,245,0.10);
-
-        /* Hide aurora in light mode — blobs look odd on white */
         --aurora-1: 0,0,0;
         --aurora-2: 0,0,0;
     }
@@ -1826,9 +1841,8 @@ kbd {
         animation: none;
     }
 
-    /* Lift scrollbar thumb to match light surface */
     [data-theme="system"] #chat-messages::-webkit-scrollbar-thumb {
-        background: rgba(13,17,23,0.14);
+        background: rgba(0,0,0,0.14);
     }
 }
 
