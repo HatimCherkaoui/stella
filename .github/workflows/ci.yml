@@ -43,7 +43,7 @@ jobs:
         run: npm ci
 
       - name: Build extension
-        run: ./build.sh --skip-tests
+        run: ./build.sh --skip-tests --no-obfuscate
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
