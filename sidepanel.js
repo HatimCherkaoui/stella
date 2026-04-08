@@ -11,6 +11,29 @@ const chatStore = (typeof chrome !== 'undefined' && chrome.storage?.local)
     ? chrome.storage.local
     : { get: (_k, cb) => cb({}), set: () => {} };
 
+// ── Bookmarks ─────────────────────────────────────────────────────────────────
+function loadBookmarks(cb) {
+    chatStore.get(['stella_bookmarks'], r => cb(r.stella_bookmarks || []));
+}
+function saveBookmarks(bms) {
+    chatStore.set({ stella_bookmarks: bms });
+}
+
+// ── Share modal state ─────────────────────────────────────────────────────────
+let _shareText = '';
+
+function openShareModal(text) {
+    _shareText = text;
+    const preview = $('share-modal-preview');
+    if (preview) preview.textContent = text.length > 320 ? text.slice(0, 320) + '…' : text;
+    $('share-modal')?.classList.remove('hidden');
+}
+
+function closeShareModal() {
+    $('share-modal')?.classList.add('hidden');
+    _shareText = '';
+}
+
 // ── Themes ──────────────────────────────────────────────────────────────────
 const THEMES = [
     { id: 'blue',    label: 'Blue',    color: '#6aa3f8' },
@@ -348,6 +371,75 @@ function renderMessage(msg) {
     wrap.appendChild(header);
     wrap.appendChild(bubble);
     if (footer.textContent) wrap.appendChild(footer);
+
+    // ── Action buttons (copy / bookmark / share) — assistant only ─────────────
+    if (msg.role === 'assistant') {
+        const actions = document.createElement('div');
+        actions.className = 'msg-actions';
+        actions.setAttribute('aria-label', 'Message actions');
+
+        const SVG_COPY =
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+            `<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+        const SVG_CHECK =
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+            `<polyline points="20 6 9 17 4 12"/></svg>`;
+        const SVG_STAR =
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+            `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+        const SVG_SHARE =
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+            `<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>` +
+            `<line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+
+        const copyBtn     = Object.assign(document.createElement('button'), { className: 'msg-action-btn', title: 'Copy response',   innerHTML: SVG_COPY  });
+        const bookmarkBtn = Object.assign(document.createElement('button'), { className: 'msg-action-btn', title: 'Bookmark',         innerHTML: SVG_STAR  });
+        const shareBtn    = Object.assign(document.createElement('button'), { className: 'msg-action-btn', title: 'Share',            innerHTML: SVG_SHARE });
+        copyBtn.setAttribute('aria-label', 'Copy response');
+        bookmarkBtn.setAttribute('aria-label', 'Bookmark response');
+        shareBtn.setAttribute('aria-label', 'Share response');
+
+        const bmId = msg.id || `ts_${msg.ts || Date.now()}`;
+
+        // Restore bookmarked visual state
+        loadBookmarks(bms => {
+            if (bms.some(b => b.id === bmId)) bookmarkBtn.classList.add('bookmarked');
+        });
+
+        // Copy
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(content.innerText).then(() => {
+                copyBtn.innerHTML = SVG_CHECK;
+                copyBtn.title = 'Copied!';
+                setTimeout(() => { copyBtn.innerHTML = SVG_COPY; copyBtn.title = 'Copy response'; }, 1800);
+            }).catch(() => {});
+        });
+
+        // Bookmark toggle
+        bookmarkBtn.addEventListener('click', () => {
+            const provLabel = msg.modelLabel || AI_PROVIDERS[msg.provider || activeProvider]?.label || 'AI';
+            loadBookmarks(bms => {
+                const idx = bms.findIndex(b => b.id === bmId);
+                if (idx >= 0) {
+                    bms.splice(idx, 1);
+                    bookmarkBtn.classList.remove('bookmarked');
+                } else {
+                    bms.unshift({ id: bmId, text: content.innerText, ts: Date.now(), label: provLabel });
+                    bookmarkBtn.classList.add('bookmarked');
+                }
+                saveBookmarks(bms);
+            });
+        });
+
+        // Share
+        shareBtn.addEventListener('click', () => openShareModal(content.innerText));
+
+        actions.appendChild(copyBtn);
+        actions.appendChild(bookmarkBtn);
+        actions.appendChild(shareBtn);
+        wrap.appendChild(actions);
+    }
+
     return wrap;
 }
 
@@ -1870,11 +1962,84 @@ function openHistoryPanel() {
     renderHistoryList();
     $('chat-history-panel').classList.remove('hidden');
     $('chat-settings-panel').classList.add('hidden');
+    $('chat-bookmarks-panel').classList.add('hidden');
+    $('chat-bookmarks-btn').classList.remove('active');
     $('sp-tabs-panel').classList.add('hidden');
 }
 
 function closeHistoryPanel() {
     $('chat-history-panel').classList.add('hidden');
+}
+
+// ── Bookmarks panel ───────────────────────────────────────────────────────────
+function openBookmarksPanel() {
+    renderBookmarksList();
+    $('chat-bookmarks-panel').classList.remove('hidden');
+    $('chat-history-panel').classList.add('hidden');
+    $('chat-settings-panel').classList.add('hidden');
+    $('sp-tabs-panel').classList.add('hidden');
+    $('chat-bookmarks-btn').classList.add('active');
+}
+
+function closeBookmarksPanel() {
+    $('chat-bookmarks-panel').classList.add('hidden');
+    $('chat-bookmarks-btn').classList.remove('active');
+}
+
+function renderBookmarksList() {
+    const list = $('chat-bookmarks-list');
+    if (!list) return;
+    list.innerHTML = '';
+    loadBookmarks(bms => {
+        if (!bms.length) {
+            const p = document.createElement('p');
+            p.style.cssText = 'font-size:12.5px;color:var(--text-muted);padding:20px 16px;text-align:center;line-height:1.7;';
+            p.textContent = 'No bookmarks yet.\nClick ★ on any AI response to save it.';
+            list.appendChild(p);
+            return;
+        }
+        bms.forEach(bm => {
+            const item = document.createElement('div');
+            item.className = 'bm-item';
+            item.dataset.bmId = bm.id;
+
+            const meta = document.createElement('div');
+            meta.className = 'bm-item-meta';
+            const date = new Date(bm.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            meta.textContent = `${bm.label || 'AI'} · ${date}`;
+
+            const preview = document.createElement('div');
+            preview.className = 'bm-item-preview';
+            preview.textContent = bm.text;
+
+            const btnRow = document.createElement('div');
+            btnRow.className = 'bm-item-actions';
+
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'chat-action-btn';
+            shareBtn.textContent = 'Share';
+            shareBtn.addEventListener('click', () => openShareModal(bm.text));
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'chat-action-btn danger';
+            delBtn.textContent = 'Delete';
+            delBtn.addEventListener('click', () => {
+                loadBookmarks(all => {
+                    saveBookmarks(all.filter(b => b.id !== bm.id));
+                    renderBookmarksList();
+                    const msgEl = document.querySelector(`[data-msg-id="${CSS.escape(bm.id)}"]`);
+                    msgEl?.querySelector('.msg-bookmark-btn')?.classList.remove('bookmarked');
+                });
+            });
+
+            btnRow.appendChild(shareBtn);
+            btnRow.appendChild(delBtn);
+            item.appendChild(meta);
+            item.appendChild(preview);
+            item.appendChild(btnRow);
+            list.appendChild(item);
+        });
+    });
 }
 
 function renderHistoryList() {
@@ -2010,6 +2175,8 @@ function openSettingsPanel() {
     buildSettingsBody();
     $('chat-settings-panel').classList.remove('hidden');
     $('chat-history-panel').classList.add('hidden');
+    $('chat-bookmarks-panel').classList.add('hidden');
+    $('chat-bookmarks-btn').classList.remove('active');
     $('sp-tabs-panel').classList.add('hidden');
 }
 
@@ -2748,6 +2915,7 @@ function initChat() {
         if (panel.classList.contains('hidden')) {
             closeHistoryPanel();
             closeSettingsPanel();
+            closeBookmarksPanel();
             panel.classList.remove('hidden');
             $('chat-about-btn').classList.add('active');
         } else {
@@ -2767,6 +2935,43 @@ function initChat() {
         panel.classList.contains('hidden') ? openSettingsPanel() : closeSettingsPanel();
     });
     $('chat-settings-close').addEventListener('click', closeSettingsPanel);
+
+    // ── Bookmarks ──
+    $('chat-bookmarks-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        const panel = $('chat-bookmarks-panel');
+        panel.classList.contains('hidden') ? openBookmarksPanel() : closeBookmarksPanel();
+    });
+    $('chat-bookmarks-close').addEventListener('click', closeBookmarksPanel);
+    $('chat-clear-bookmarks-btn').addEventListener('click', () => {
+        if (!confirm('Delete all bookmarks? This cannot be undone.')) return;
+        saveBookmarks([]);
+        renderBookmarksList();
+        document.querySelectorAll('.msg-bookmark-btn.bookmarked').forEach(b => b.classList.remove('bookmarked'));
+    });
+
+    // ── Share modal ──
+    $('share-modal-close').addEventListener('click', closeShareModal);
+    $('share-modal').querySelector('.share-modal-backdrop').addEventListener('click', closeShareModal);
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !$('share-modal').classList.contains('hidden')) closeShareModal();
+    });
+    $('share-copy-btn').addEventListener('click', () => {
+        const btn = $('share-copy-btn');
+        const origHTML = btn.innerHTML;
+        navigator.clipboard.writeText(_shareText).then(() => {
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.innerHTML = origHTML; }, 1800);
+        }).catch(() => {});
+    });
+    $('share-x-btn').addEventListener('click', () => {
+        const t = _shareText.length > 260 ? _shareText.slice(0, 260) + '…' : _shareText;
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`, '_blank', 'noopener,noreferrer');
+    });
+    $('share-linkedin-btn').addEventListener('click', () => {
+        const t = _shareText.length > 700 ? _shareText.slice(0, 700) + '…' : _shareText;
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?mini=true&summary=${encodeURIComponent(t)}`, '_blank', 'noopener,noreferrer');
+    });
 
     // ── New chat ──
     $('chat-new-btn').addEventListener('click', () => {

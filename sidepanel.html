@@ -32,6 +32,11 @@
                     <line x1="12" y1="12" x2="12" y2="16"/>
                 </svg>
             </button>
+            <button id="chat-bookmarks-btn" class="chat-icon-btn" title="Bookmarks" aria-label="Bookmarks">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </button>
             <button id="chat-history-btn" class="chat-icon-btn" title="Chat history" aria-label="Chat history">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="1 4 1 10 7 10"/>
@@ -86,6 +91,18 @@
             <div class="chat-side-panel-ftr">
                 <button id="chat-export-btn" class="chat-action-btn">Export JSON</button>
                 <button id="chat-clear-history-btn" class="chat-action-btn danger">Clear all</button>
+            </div>
+        </div>
+
+        <!-- ── Bookmarks panel (overlay) ── -->
+        <div id="chat-bookmarks-panel" class="chat-side-panel hidden" aria-label="Saved responses">
+            <div class="chat-side-panel-hdr">
+                <span>Bookmarks</span>
+                <button id="chat-bookmarks-close" class="chat-icon-btn" aria-label="Close bookmarks">&times;</button>
+            </div>
+            <div id="chat-bookmarks-list"></div>
+            <div class="chat-side-panel-ftr">
+                <button id="chat-clear-bookmarks-btn" class="chat-action-btn danger">Clear all</button>
             </div>
         </div>
 
@@ -280,6 +297,32 @@
         </div>
 
     </div><!-- #sp-chat -->
+
+    <!-- ── Share modal ── -->
+    <div id="share-modal" class="share-modal hidden" role="dialog" aria-modal="true" aria-label="Share response">
+        <div class="share-modal-backdrop"></div>
+        <div class="share-modal-box">
+            <div class="share-modal-hdr">
+                <span>Share response</span>
+                <button id="share-modal-close" class="chat-icon-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="share-modal-preview" id="share-modal-preview"></div>
+            <div class="share-modal-btns">
+                <button class="share-btn share-btn-copy" id="share-copy-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy text
+                </button>
+                <button class="share-btn share-btn-x" id="share-x-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.254 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Post on X
+                </button>
+                <button class="share-btn share-btn-linkedin" id="share-linkedin-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                    Share on LinkedIn
+                </button>
+            </div>
+        </div>
+    </div>
 
 </div><!-- #sp-root -->
 
