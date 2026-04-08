@@ -5,6 +5,70 @@ chrome.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch(() => {});
 
+// ── Helper: open panel in the current focused window ─────────────────────────
+async function openPanel() {
+    try {
+        const [win] = await chrome.windows.getAll({ windowTypes: ['normal'] })
+            .then(wins => wins.filter(w => w.focused));
+        const windowId = win?.id ?? chrome.windows.WINDOW_ID_CURRENT;
+        await chrome.sidePanel.open({ windowId });
+    } catch { /* ignore — may fail if no normal window is focused */ }
+}
+
+// ── Phase 1: Auto-open on first install ──────────────────────────────────────
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+    // Auto-open panel so user immediately sees Stella without hunting
+    if (reason === 'install') {
+        await openPanel();
+    }
+
+    // Phase 3: Register context menu entries (must be re-created after install/update)
+    chrome.contextMenus.removeAll(() => {
+        chrome.contextMenus.create({
+            id: 'stella-page',
+            title: 'Ask Stella about this page',
+            contexts: ['page'],
+        });
+        chrome.contextMenus.create({
+            id: 'stella-selection',
+            title: 'Ask Stella about "%s"',
+            contexts: ['selection'],
+        });
+    });
+});
+
+// ── Phase 2: Keyboard shortcut (Alt+Shift+S / remappable) ────────────────────
+chrome.commands.onCommand.addListener(command => {
+    if (command === 'toggle-stella') openPanel();
+});
+
+// ── Phase 3: Context menu click handler ──────────────────────────────────────
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+    // Store the pending prompt in session storage — sidepanel.js reads it on load/focus
+    const payload = {
+        type: info.menuItemId === 'stella-selection' ? 'selection' : 'page',
+        text: info.selectionText || null,
+        tabId: tab?.id || null,
+        tabTitle: tab?.title || null,
+        tabUrl: tab?.url || null,
+    };
+    await chrome.storage.session.set({ stellaPendingPrompt: payload });
+    await openPanel();
+});
+
+// ── Phase 4: Restore panel when a new window is opened ───────────────────────
+// If the panel was open when the user last closed/left, re-open it in new windows.
+chrome.windows.onCreated.addListener(async win => {
+    if (win.type !== 'normal') return;
+    try {
+        const data = await chrome.storage.local.get('stellaPanelOpen');
+        if (data.stellaPanelOpen) {
+            // Small delay so the window is fully ready before we open the panel
+            setTimeout(() => chrome.sidePanel.open({ windowId: win.id }).catch(() => {}), 400);
+        }
+    } catch { /* ignore */ }
+});
+
 // ── Track last active browser tab ─────────────────────────────────────────────
 // Stored in chrome.storage.session so it survives service-worker sleep/restart.
 

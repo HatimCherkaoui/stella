@@ -20,7 +20,8 @@
         "tabs",
         "scripting",
         "activeTab",
-        "sidePanel"
+        "sidePanel",
+        "contextMenus"
     ],
     "host_permissions": [
         "<all_urls>",
@@ -32,6 +33,15 @@
     "background": {
         "service_worker": "background.js",
         "type": "module"
+    },
+    "commands": {
+        "toggle-stella": {
+            "suggested_key": {
+                "default": "Alt+Shift+S",
+                "mac": "Alt+Shift+S"
+            },
+            "description": "Open Stella AI"
+        }
     },
     "icons": {
         "16": "icons/icon16.png",

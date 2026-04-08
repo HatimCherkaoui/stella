@@ -2823,9 +2823,43 @@ function initChat() {
         }
     });
 
-    // Save active session on panel hide
+    // Phase 4: Persist panel-open state so background.js can restore it in new windows
+    chatStore.set({ stellaPanelOpen: true });
     document.addEventListener('visibilitychange', () => {
         if (activeSdession) chatStore.set({ lastActiveSdession: activeSdession });
+        // Update open state — false when panel tab is hidden (panel closed/minimised)
+        chatStore.set({ stellaPanelOpen: document.visibilityState === 'visible' });
+    });
+
+    // Phase 5: Consume any pending context-menu prompt from background.js
+    const sessionStore = (typeof chrome !== 'undefined' && chrome.storage?.session)
+        ? chrome.storage.session
+        : { get: (_k, cb) => cb({}), remove: () => {} };
+
+    sessionStore.get(['stellaPendingPrompt'], data => {
+        const p = data?.stellaPendingPrompt;
+        if (!p) return;
+        // Clear immediately so it doesn't fire again on next load
+        sessionStore.remove('stellaPendingPrompt');
+
+        const input = $('chat-input');
+        if (!input) return;
+
+        if (p.type === 'selection' && p.text) {
+            input.value = p.text;
+        } else if (p.type === 'page' && p.tabId) {
+            // Pre-fill a ready-to-send prompt referencing the page
+            input.value = `Summarise this page for me.`;
+            // Also auto-load the tab as context if the tab tracker is ready
+            if (p.tabId && typeof readTabContent === 'function') {
+                readTabContent(p.tabId).catch(() => {});
+            }
+        }
+        autoGrowTextarea(input);
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+        const sendBtn = $('chat-send-btn');
+        if (sendBtn && input.value.trim()) sendBtn.disabled = false;
     });
 }
 
