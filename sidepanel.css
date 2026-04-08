@@ -1790,62 +1790,6 @@ kbd {
 
 /* — system (auto: mirrors OS dark/light preference) ————————————— */
 /* Dark: keep the default blue-black base — no overrides needed */
-/* System theme: use CSS system color keywords so base colours follow OS/Chrome
-   natively. color-scheme: light dark tells Chrome to pick the right palette.
-   Accent, glow and interactive surface tokens are still explicit (no system
-   colour equivalent exists for those) and split by media query.               */
-[data-theme="system"] {
-    color-scheme: light dark;
-    --bg:          Canvas;
-    --text:        CanvasText;
-    --text-muted:  GrayText;
-    --text-faint:  GrayText;
-    --surface:     ButtonFace;
-}
-
-/* Dark OS/Chrome ─────────────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-    [data-theme="system"] {
-        --accent:         #6aa3f8;
-        --accent-glow:    rgba(106,163,248,0.30);
-        --accent-dim:     rgba(106,163,248,0.14);
-        --accent-subtle:  rgba(60,110,235,0.10);
-        --border:         rgba(255,255,255,0.08);
-        --border-focus:   rgba(106,163,248,0.55);
-        --surface-hover:  rgba(60,110,235,0.11);
-        --surface-active: rgba(106,163,248,0.14);
-        --aurora-1: 20,65,195;
-        --aurora-2: 10,36,120;
-    }
-}
-
-/* Light OS/Chrome ────────────────────────────────────────────────────────── */
-@media (prefers-color-scheme: light) {
-    [data-theme="system"] {
-        --accent:         #1a6ef5;
-        --accent-glow:    rgba(26,110,245,0.20);
-        --accent-dim:     rgba(26,110,245,0.10);
-        --accent-subtle:  rgba(26,110,245,0.07);
-        --border:         rgba(0,0,0,0.10);
-        --border-focus:   rgba(26,110,245,0.50);
-        --surface-hover:  rgba(26,110,245,0.06);
-        --surface-active: rgba(26,110,245,0.10);
-        --aurora-1: 0,0,0;
-        --aurora-2: 0,0,0;
-    }
-
-    /* Aurora invisible in light mode */
-    [data-theme="system"] #sp-root::before,
-    [data-theme="system"] #sp-root::after {
-        opacity: 0 !important;
-        animation: none;
-    }
-
-    [data-theme="system"] #chat-messages::-webkit-scrollbar-thumb {
-        background: rgba(0,0,0,0.14);
-    }
-}
-
 /* ── Theme picker (rendered in settings panel) ──────────────────────────────── */
 .theme-swatch-row {
     display: flex;
@@ -1868,9 +1812,3 @@ kbd {
 }
 .theme-swatch:hover                { transform: scale(1.15); }
 .theme-swatch[aria-pressed="true"] { outline-color: var(--text); }
-
-/* System swatch — half dark / half light to communicate auto-switching */
-.theme-swatch[data-theme-id="system"] {
-    background: linear-gradient(135deg, #0d1117 50%, #f5f7fa 50%) !important;
-    border-color: var(--border);
-}
