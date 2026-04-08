@@ -130,6 +130,65 @@ html, body {
     100% { opacity: 0;    }
 }
 
+/* ── Stardust / noise grain overlay ───────────────────────────────────────────── */
+/*
+   Two-layer approach:
+   1. #sp-noise — SVG feTurbulence fractalNoise tile at 6% opacity with
+      mix-blend-mode:screen.  On dark backgrounds this turns bright grains
+      into light pinpricks = cosmic dust / film grain look.
+   2. #sp-noise::before / ::after — a handful of soft radial sparkle points
+      at fixed positions, slowly breathing via opacity only.
+*/
+#sp-noise {
+    position: absolute;
+    inset: 0;
+    z-index: -1;           /* above aurora (-2,-3) but below all content */
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: screen;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 180px 180px;
+}
+
+/* Sparkle pinpoints layer — 6 tiny radial glows at scattered positions */
+#sp-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle 1.5px at 18% 22%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 1px  at 72% 14%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 2px  at 55% 68%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 1px  at 88% 44%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 1.5px at 34% 82%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 1px  at 12% 57%, var(--accent) 0%, transparent 100%);
+    opacity: 0;
+    animation: sparkleDrift 9s ease-in-out infinite;
+}
+#sp-noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle 1px  at 62% 31%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 2px  at 91% 78%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 1.5px at 28% 48%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 1px  at 46% 92%, var(--accent) 0%, transparent 100%),
+        radial-gradient(circle 2px  at 78% 61%, var(--accent) 0%, transparent 100%);
+    opacity: 0;
+    animation: sparkleDrift 13s ease-in-out 4.5s infinite;
+}
+
+@keyframes sparkleDrift {
+    0%,100% { opacity: 0;    }
+    20%      { opacity: 0.55; }
+    50%      { opacity: 0.30; }
+    80%      { opacity: 0.60; }
+}
+
 /* ── Header (compact) ─────────────────────────────────────────────────────── */
 #sp-header {
     display: flex;
